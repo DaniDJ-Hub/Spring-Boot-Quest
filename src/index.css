@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-ink text-chalk font-sans antialiased;
+    background-image:
+      radial-gradient(900px 500px at 15% -10%, rgba(95,168,60,.09), transparent 60%),
+      radial-gradient(700px 400px at 95% 0%, rgba(76,141,217,.07), transparent 60%);
+    background-attachment: fixed;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-leaf ring-offset-2 ring-offset-ink rounded;
+  }
+  ::selection { background: rgba(95,168,60,.3); }
+  h1, h2, h3 { @apply font-display; }
+}
+
+@layer components {
+  .panel { @apply bg-ink-panel/70 border border-line rounded-lg; }
+  .rule  { @apply border-line; }
+  .tnum  { font-variant-numeric: tabular-nums; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* Scrollbar discreto, alineado con el tema */
+* { scrollbar-width: thin; scrollbar-color: #2E3757 transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: #2E3757; border-radius: 4px; }

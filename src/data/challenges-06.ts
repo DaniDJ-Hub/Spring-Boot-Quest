@@ -1,0 +1,105 @@
+import type { Challenge } from '../types'
+
+/** Retos que cierran huecos de cobertura: conceptos declarados en los mundos
+ *  que ningún otro reto tocaba, más los que faltaban para completar boss battles. */
+export const CH_06: Challenge[] = [
+  {
+    id: 'w04-q4', worldId: 'w04', kind: 'quiz', concepts: ['service', 'repository', 'component'], difficulty: 2, xp: 12,
+    prompt: '@Component, @Service y @Repository hacen técnicamente casi lo mismo. ¿Por qué existen los tres?',
+    options: [
+      { id: 'a', text: 'Cada uno registra el bean en un contenedor distinto.' },
+      { id: 'b', text: 'Comunican la intención de la clase, y @Repository además traduce las excepciones del proveedor de persistencia a la jerarquía de Spring.' },
+      { id: 'c', text: '@Service es más rápido porque no permite inyección.' },
+      { id: 'd', text: '@Repository es obligatorio para que JPA funcione.' },
+    ],
+    answer: 'b',
+    explain: 'Los tres registran un bean, y quien lee el código sabe de inmediato qué capa está mirando. La traducción de excepciones de @Repository es la única diferencia funcional real de las tres.',
+    deeper: 'Con Spring Data ni siquiera necesitas anotar el repositorio: extender JpaRepository basta. La anotación se vuelve útil cuando escribes una implementación propia de acceso a datos.',
+  },
+  {
+    id: 'w04-a1', worldId: 'w04', kind: 'arch', concepts: ['ioc', 'constructor-injection', 'capas'], difficulty: 3, xp: 16,
+    prompt: 'Necesitas que el Service pueda trabajar contra MySQL hoy y contra una API externa mañana, sin cambiar el Service. ¿Qué diseño lo permite?',
+    options: [
+      { id: 'a', text: 'El Service inyecta la clase concreta del repositorio y se cambia cuando llegue el momento.' },
+      { id: 'b', text: 'El Service depende de una interfaz de repositorio; hay dos implementaciones y el contenedor decide cuál inyecta con @Primary o @Qualifier.' },
+      { id: 'c', text: 'El Service tiene un if que revisa una propiedad y decide qué implementación instanciar.' },
+      { id: 'd', text: 'Duplicar el Service, uno por cada origen de datos.' },
+    ],
+    answer: 'b',
+    explain: 'Depender de la abstracción es lo que hace la sustitución posible. La decisión de qué implementación se usa sale del Service y pasa a la configuración, que es exactamente el punto de la inversión de control.',
+    deeper: 'La opción C es la trampa: parece flexible y mete conocimiento de ambas implementaciones dentro del Service, que ahora depende de las dos.',
+  },
+  {
+    id: 'w10-q4', worldId: 'w10', kind: 'quiz', concepts: ['onetoone', 'joincolumn'], difficulty: 3, xp: 16,
+    prompt: 'Usuario tiene un Perfil y cada Perfil pertenece a un solo Usuario. ¿Cómo se mapea?',
+    options: [
+      { id: 'a', text: '@OneToOne con @JoinColumn en el lado dueño, y @OneToOne(mappedBy = "...") en el inverso.' },
+      { id: 'b', text: '@ManyToOne en ambos lados.' },
+      { id: 'c', text: '@OneToMany con una lista de un solo elemento.' },
+      { id: 'd', text: 'No hace falta anotar nada: JPA lo deduce del nombre.' },
+    ],
+    answer: 'a',
+    explain: 'La lógica es la misma que en @ManyToOne: un lado tiene la clave foránea y es el dueño; el otro se declara inverso con mappedBy. La diferencia es que la columna suele llevar restricción única.',
+    deeper: 'Cuidado con el fetch: @OneToOne es EAGER por defecto, al revés que @OneToMany. Es una fuente silenciosa de consultas extra en cada carga de la entidad.',
+  },
+  {
+    id: 'w11-f2', worldId: 'w11', kind: 'fill', concepts: ['notblank', 'valid'], difficulty: 2, xp: 14,
+    prompt: 'Escribe la restricción que exige que este campo llegue con texto real, no null ni cadena vacía ni solo espacios.',
+    code: 'public class ClienteDto {\n\n    ____________\n    private String nombre;\n\n    @Email\n    private String correo;\n}',
+    lang: 'java',
+    accept: ['notblank'],
+    placeholder: '@...',
+    explain: '@NotNull acepta la cadena vacía y @NotEmpty acepta espacios en blanco. @NotBlank es la única que rechaza las tres formas de "vacío" que llegan en la práctica desde un formulario.',
+    hint: 'Hay tres candidatas parecidas; solo una rechaza una cadena de puros espacios.',
+  },
+  {
+    id: 'w12-q4', worldId: 'w12', kind: 'quiz', concepts: ['userdetails', 'authentication'], difficulty: 3, xp: 16,
+    prompt: '¿Cuál es el papel de UserDetailsService en la autenticación?',
+    options: [
+      { id: 'a', text: 'Valida la contraseña que envía el usuario.' },
+      { id: 'b', text: 'Carga el usuario por su nombre y devuelve sus datos y authorities; la comparación de la contraseña la hace el PasswordEncoder.' },
+      { id: 'c', text: 'Genera el token JWT.' },
+      { id: 'd', text: 'Guarda la sesión del usuario en memoria.' },
+    ],
+    answer: 'b',
+    explain: 'Es un punto de extensión con una sola responsabilidad: dado un nombre de usuario, entregar sus datos. De dónde salen, base de datos, LDAP o memoria, es asunto de tu implementación.',
+    deeper: 'Si el usuario no existe, lanza UsernameNotFoundException. Por seguridad, la respuesta al cliente debe ser la misma que para una contraseña incorrecta: revelar cuál de las dos falló facilita enumerar usuarios.',
+  },
+  {
+    id: 'w14-q2', worldId: 'w14', kind: 'quiz', concepts: ['manejo-401', 'header-authorization'], difficulty: 3, xp: 16,
+    prompt: 'El frontend recibe 401 en una llamada intermedia con un token que ayer funcionaba. ¿Cuál es la causa más probable y qué debe hacer el cliente?',
+    options: [
+      { id: 'a', text: 'El token expiró. El cliente debe descartarlo, y renovarlo con el refresh token o mandar al usuario al login.' },
+      { id: 'b', text: 'El servidor está caído; hay que reintentar la misma llamada.' },
+      { id: 'c', text: 'Falta configurar CORS.' },
+      { id: 'd', text: 'El usuario perdió permisos; hay que mostrar un mensaje de acceso denegado.' },
+    ],
+    answer: 'a',
+    explain: '401 es "no sé quién eres", y con un token que antes servía la explicación casi siempre es la expiración. La pérdida de permisos daría 403, que es un caso distinto.',
+    deeper: 'Reintentar con el mismo token (opción B) genera un bucle. El cliente necesita distinguir 401 de 403 y reaccionar distinto a cada uno.',
+  },
+  {
+    id: 'w15-c1', worldId: 'w15', kind: 'codefix', concepts: ['paginacion'], difficulty: 3, xp: 16,
+    prompt: 'Este endpoint pagina, pero el log muestra que trae los 50 000 registros en cada llamada. Elige la corrección.',
+    code: '@GetMapping("/clientes")\npublic String listar(Model model, @RequestParam(defaultValue = "0") int page) {\n    List<Cliente> todos = repo.findAll();\n    model.addAttribute("clientes", todos.subList(page * 20, page * 20 + 20));\n    return "lista";\n}',
+    lang: 'java',
+    options: [
+      { id: 'a', text: 'Recibir un Pageable y devolver un Page, para que el límite llegue al SQL.', code: '@GetMapping("/clientes")\npublic String listar(Model model, @PageableDefault(size = 20) Pageable pageable) {\n    model.addAttribute("clientes", repo.findAll(pageable));\n    return "lista";\n}' },
+      { id: 'b', text: 'Añadir caché sobre findAll().', code: '@Cacheable("clientes")\nList<Cliente> findAll();' },
+      { id: 'c', text: 'Aumentar el tamaño del pool de conexiones.', code: 'spring.datasource.hikari.maximum-pool-size=50' },
+      { id: 'd', text: 'Cambiar subList por un stream con limit.', code: 'todos.stream().skip(page * 20).limit(20).toList()' },
+    ],
+    answer: 'a',
+    explain: 'Cortar en Java ocurre después de haber traído todo. Pageable se traduce a LIMIT y OFFSET en la consulta, así que la base de datos solo devuelve las veinte filas.',
+    deeper: 'La opción D es el mismo error con sintaxis más moderna: sigue cargando los 50 000 registros en memoria antes de descartarlos.',
+  },
+  {
+    id: 'w15-f1', worldId: 'w15', kind: 'fill', concepts: ['flash-attributes', 'redirect'], difficulty: 3, xp: 16,
+    prompt: 'Escribe el nombre del parámetro que hay que recibir para poder enviar un mensaje que sobreviva al redirect.',
+    code: '@PostMapping("/clientes")\npublic String guardar(@Valid Cliente cliente, BindingResult result,\n                     ______________________ flash) {\n\n    servicio.guardar(cliente);\n    flash.addFlashAttribute("mensaje", "Cliente guardado");\n    return "redirect:/clientes";\n}',
+    lang: 'java',
+    accept: ['redirectattributes'],
+    placeholder: 'Tipo del parámetro',
+    explain: 'RedirectAttributes guarda el valor temporalmente para la siguiente petición y lo descarta después. Un atributo normal del Model se pierde en cuanto el navegador hace la petición nueva.',
+  },
+]
