@@ -6,7 +6,7 @@ import type { ActionsCtx, StateCtx, Toast, ToastsCtx } from './game-context'
 import { ACHIEVEMENTS } from '../data'
 import { WORLDS } from '../data/worlds'
 import {
-  bossBonus, bumpStreak, createSaver, emptyState, EXAM_XP_PER_CORRECT, HINT_XP_FACTOR, loadState, LOG_LIMIT,
+  bossBonus, bumpStreak, challengeXp, createSaver, emptyState, EXAM_XP_PER_CORRECT, loadState, LOG_LIMIT,
   masteryOf, todayKey,
 } from './core'
 import { achievementsFor } from './achievements'
@@ -82,7 +82,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         concepts,
         everRed: [...everRed],
         noHintRun: correct && !usedHint ? prev.noHintRun + 1 : 0,
-        xp: prev.xp + (correct ? (usedHint ? Math.round(c.xp * HINT_XP_FACTOR) : c.xp) : 0),
+        xp: prev.xp + challengeXp(c.xp, correct, usedHint),
         solved: correct ? { ...prev.solved, [c.id]: (prev.solved[c.id] ?? 0) + 1 } : prev.solved,
         failed: correct ? prev.failed : { ...prev.failed, [c.id]: (prev.failed[c.id] ?? 0) + 1 },
         streak: bumpStreak(prev.streak),

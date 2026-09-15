@@ -242,6 +242,12 @@ export const EXAM_PER_WORLD = 2
 export const HINT_XP_FACTOR = 0.6
 export const EXAM_XP_PER_CORRECT = 12
 
+/** XP que concede responder un reto: nada si se falla, recortado si se usó la pista. */
+export function challengeXp(xp: number, correct: boolean, usedHint: boolean): number {
+  if (!correct) return 0
+  return usedHint ? Math.round(xp * HINT_XP_FACTOR) : xp
+}
+
 /** Bono de XP por superar la boss battle de un mundo por primera vez. */
 export function bossBonus(world?: World): number {
   return world ? 40 + world.index * 10 : 40
