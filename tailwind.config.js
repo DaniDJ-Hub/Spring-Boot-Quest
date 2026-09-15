@@ -1,60 +1,50 @@
+import { modes, palette } from './src/styles/palette.js'
+
+/* ------------------------------- Color ---------------------------------
+ * Los colores salen de src/styles/palette.js. Cada token se sirve como una
+ * variable CSS con canales RGB, así que las utilidades admiten opacidad
+ * (`bg-accent/10`) y un modo puede redefinir superficies en un contenedor
+ * (`data-mode="boss"`) sin duplicar clases.
+ */
+const channels = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)).join(' ')
+const varName = (group, key) => (key === 'DEFAULT' ? `--c-${group}` : `--c-${group}-${key}`)
+
+const toVars = pal => {
+  const out = {}
+  for (const [group, values] of Object.entries(pal)) {
+    for (const [key, hex] of Object.entries(values)) out[varName(group, key)] = channels(hex)
+  }
+  return out
+}
+
+const colors = Object.fromEntries(
+  Object.entries(palette).map(([group, values]) => [
+    group,
+    Object.fromEntries(Object.keys(values).map(key => [key, `rgb(var(${varName(group, key)}) / <alpha-value>)`])),
+  ]),
+)
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
-      /* ------------------------------- Color -------------------------------
-       * Tokens por función, no por tinte: si mañana el verde cambia, se cambia
-       * en un sitio y nada llamado `accent` deja de tener sentido.
-       * Todos los valores están verificados contra los tres fondos:
-       * texto ≥ 4.5:1 (WCAG AA) y bordes de control ≥ 3:1 (WCAG 1.4.11).
-       */
-      colors: {
-        surface: {
-          DEFAULT: '#151A2D',   // fondo de la aplicación
-          raised:  '#1E2540',   // paneles y tarjetas
-          sunken:  '#0F1322',   // bloques de código, campos de texto
-          overlay: '#262E4E',   // capas por encima de un panel
-        },
-        edge: {
-          DEFAULT: '#333D61',   // divisores y contenedores
-          soft:    '#28304F',   // separación mínima dentro de un panel
-          strong:  '#646E94',   // límite de un control (3.01:1)
-        },
-        fg: {
-          DEFAULT:   '#E4E8F5', // texto principal      14.09:1
-          secondary: '#A3AAC4', // texto de apoyo         6.53:1
-          tertiary:  '#808BB7', // metadatos y cifras     4.52:1
-        },
-        accent:  { DEFAULT: '#5FA83C', bright: '#7BC653', dim: '#3D6B27' },
-        warning: { DEFAULT: '#E8A33D', dim: '#8A5F1E' },
-        danger:  { DEFAULT: '#F2656A', dim: '#7A2226' },
-        info:    { DEFAULT: '#6BA3E8', dim: '#27466E' },
-
-        /* Escala de dominio con identidad propia: antes «básico» y «en progreso»
-         * compartían ámbar y se veían idénticos siendo estados distintos. */
-        mastery: {
-          none:     '#F2656A',
-          basic:    '#E8853D',
-          progress: '#E8A33D',
-          mastered: '#5FA83C',
-          expert:   '#6BA3E8',
-        },
-      },
+      colors,
 
       /* ----------------------------- Tipografía ----------------------------
-       * Siete pasos y ninguno más. Antes había 26 usos de text-[11px] sueltos
-       * conviviendo con la escala por defecto de Tailwind.
+       * Rol: Space Grotesk para títulos, XP y resultados; Inter para interfaz e
+       * instrucciones; JetBrains Mono para código, logs, IDs y contadores.
        */
       fontSize: {
-        micro:   ['0.6875rem', { lineHeight: '1.45' }],  // 11px · contadores, etiquetas
-        caption: ['0.8125rem', { lineHeight: '1.5' }],   // 13px · texto secundario
-        body:    ['0.9375rem', { lineHeight: '1.65' }],  // 15px · lectura
-        lead:    ['1.125rem',  { lineHeight: '1.45' }],  // 18px · entradilla
-        h3:      ['1.25rem',   { lineHeight: '1.3' }],   // 20px
-        h2:      ['1.5rem',    { lineHeight: '1.25' }],  // 24px
-        h1:      ['2rem',      { lineHeight: '1.15', letterSpacing: '-0.015em' }], // 32px
-        code:    ['0.78125rem', { lineHeight: '1.7' }],  // 12.5px · solo bloques de código
+        micro:   ['0.6875rem', { lineHeight: '1.45' }],                          // 11 · IDs, etiquetas de etapa
+        caption: ['0.8125rem', { lineHeight: '1.5' }],                           // 13 · apoyo
+        body:    ['0.9375rem', { lineHeight: '1.6' }],                           // 15 · lectura
+        lead:    ['1.125rem',  { lineHeight: '1.45' }],                          // 18 · enunciado
+        h3:      ['1.25rem',   { lineHeight: '1.3' }],                           // 20
+        h2:      ['1.5rem',    { lineHeight: '1.25' }],                          // 24
+        h1:      ['2rem',      { lineHeight: '1.15', letterSpacing: '-0.015em' }], // 32
+        display: ['2.75rem',   { lineHeight: '1.05', letterSpacing: '-0.02em' }],  // 44 · XP, nivel, % de resultado
+        code:    ['0.875rem',  { lineHeight: '1.7' }],                           // 14 · código y logs
       },
 
       fontFamily: {
@@ -63,36 +53,46 @@ export default {
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
 
-      /* ------------------------------- Radio -------------------------------
-       * Regla: el radio crece con el tamaño del elemento.
-       */
+      /* Radio: crece con el tamaño del elemento. Cerrado, de herramienta. */
       borderRadius: {
-        sm: '0.25rem',   // 4px  · chips, marcas
-        md: '0.5rem',    // 8px  · botones, opciones, campos
-        lg: '0.75rem',   // 12px · paneles y tarjetas
+        sm: '0.25rem',   // 4  · chips, segmentos
+        md: '0.375rem',  // 6  · controles, nodos
+        lg: '0.625rem',  // 10 · paneles
       },
 
-      /* ------------------------------ Movimiento ---------------------------
-       * Duraciones y curvas con nombre, para que no aparezcan valores sueltos.
-       */
+      /* Elevación: la jerarquía la dan superficie y borde. La única sombra es
+       * para lo que flota por encima de todo: toast y diálogo. */
+      boxShadow: {
+        float: '0 8px 24px rgb(0 0 0 / 0.5)',
+      },
+
+      /* Movimiento: mismas duraciones que src/animations/motion.ts. */
       transitionDuration: {
-        instant: '90ms',   // respuesta a una pulsación
-        quick: '160ms',    // cambio de estado
-        smooth: '260ms',   // entrada de un elemento
+        fast: '150ms',   // respuesta a una acción
+        base: '250ms',   // cambio de estado, entrada
+        slow: '400ms',   // cambios de dominio, resultados
+        unlock: '550ms', // solo el desbloqueo de dependencias
       },
       transitionTimingFunction: {
         out: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        move: 'cubic-bezier(0.65, 0, 0.35, 1)',
       },
 
       keyframes: {
-        pop:   { '0%': { transform: 'scale(.96)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
-        slide: { '0%': { transform: 'translateY(6px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+        breathe: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.55' } },
+        spin: { to: { transform: 'rotate(360deg)' } },
       },
       animation: {
-        pop: 'pop 180ms cubic-bezier(0.22, 1, 0.36, 1)',
-        slide: 'slide 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+        breathe: 'breathe 1.6s ease-in-out infinite',
+        spin: 'spin 0.9s linear infinite',
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // Variables de color: la paleta base en :root y cada modo en su contenedor.
+    ({ addBase }) => {
+      addBase({ ':root': toVars(palette) })
+      for (const [name, pal] of Object.entries(modes)) addBase({ [`[data-mode="${name}"]`]: toVars(pal) })
+    },
+  ],
 }

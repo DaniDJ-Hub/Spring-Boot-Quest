@@ -1,96 +1,129 @@
 import type { Transition, Variants } from 'motion/react'
 
 /**
- * Sistema de animación centralizado.
+ * Lenguaje de movimiento.
  *
- * Regla que decide qué entra aquí: una animación tiene que comunicar un cambio,
- * dar respuesta a una acción, establecer jerarquía o hacer más natural una
- * interacción. Si no cumple ninguna, no se anima.
+ * Una animación tiene que comunicar un cambio, responder a una acción,
+ * establecer jerarquía o hacer más natural una interacción. Si no cumple
+ * ninguna, no se anima. Solo se animan transform y opacity.
  *
- * Y si una transición de CSS basta —un color al pasar el ratón, una barra que
- * crece— se queda en CSS. Motion se usa donde CSS no llega: sobre todo salidas,
- * que CSS no puede animar porque el nodo ya no existe.
- *
- * Las duraciones son las mismas que los tokens de Tailwind (`duration-instant`,
- * `quick`, `smooth`), expresadas en segundos porque es lo que espera Motion.
+ * Las duraciones son las mismas que los tokens de Tailwind (`duration-fast`,
+ * `base`, `slow`, `unlock`), expresadas en segundos porque es lo que espera Motion.
  */
 export const DURATION = {
-  instant: 0.09,
-  quick: 0.16,
-  smooth: 0.26,
+  fast: 0.15,   // respuesta a una acción, sello de veredicto
+  base: 0.25,   // cambio de estado, entrada de un reto
+  slow: 0.4,    // cambio de dominio, resultados
+  unlock: 0.55, // solo el recorrido de una dependencia resuelta
 } as const
 
-/** Una sola curva para todo: la misma que `ease-out` en tailwind.config.js. */
-export const EASE = [0.22, 1, 0.36, 1] as const
+/** Entradas y cambios de estado: arranca rápido y se posa. */
+export const EASE_OUT = [0.22, 1, 0.36, 1] as const
+/** Desplazamientos entre dos posiciones: reordenar, recorrer una arista. */
+export const EASE_IN_OUT = [0.65, 0, 0.35, 1] as const
 
-export const T: Record<'instant' | 'quick' | 'smooth', Transition> = {
-  instant: { duration: DURATION.instant, ease: EASE },
-  quick: { duration: DURATION.quick, ease: EASE },
-  smooth: { duration: DURATION.smooth, ease: EASE },
+export const T: Record<'fast' | 'base' | 'slow' | 'unlock', Transition> = {
+  fast: { duration: DURATION.fast, ease: EASE_OUT },
+  base: { duration: DURATION.base, ease: EASE_OUT },
+  slow: { duration: DURATION.slow, ease: EASE_IN_OUT },
+  unlock: { duration: DURATION.unlock, ease: EASE_IN_OUT },
 }
 
-/** Muelle corto para lo que aparece de golpe y debe notarse. */
+/** Muelle corto, reservado a lo que interrumpe: toast y diálogo. */
 export const SPRING: Transition = { type: 'spring', stiffness: 420, damping: 30, mass: 0.7 }
 
 /* ------------------------------ Variantes ------------------------------ */
 
-/** Cambio de pantalla: lo justo para que se lea como sustitución, no parpadeo. */
+/** Cambio de pantalla: lo justo para leerse como sustitución, no parpadeo. */
 export const page: Variants = {
   hidden: { opacity: 0, y: 4 },
-  show: { opacity: 1, y: 0, transition: T.quick },
-  exit: { opacity: 0, transition: T.instant },
+  show: { opacity: 1, y: 0, transition: T.base },
+  exit: { opacity: 0, transition: T.fast },
 }
 
 /** Reto que entra y sale. La dirección refuerza que se avanza. */
 export const challenge: Variants = {
   hidden: { opacity: 0, x: 12 },
-  show: { opacity: 1, x: 0, transition: T.smooth },
-  exit: { opacity: 0, x: -12, transition: T.quick },
+  show: { opacity: 1, x: 0, transition: T.base },
+  exit: { opacity: 0, x: -12, transition: T.fast },
 }
 
-/** Aviso de logro: es lo único que interrumpe, así que es lo único con muelle. */
+/** Bloque que aparece donde antes no había nada: explicación, consola. */
+export const reveal: Variants = {
+  hidden: { opacity: 0, y: 6 },
+  show: { opacity: 1, y: 0, transition: T.base },
+}
+
+/** Sello BUILD SUCCESS / BUILD FAILED: se imprime, no rebota. */
+export const verdict: Variants = {
+  hidden: { opacity: 0, scale: 0.98 },
+  show: { opacity: 1, scale: 1, transition: T.fast },
+}
+
+/** Aviso de logro: interrumpe, por eso lleva muelle. */
 export const toast: Variants = {
   hidden: { opacity: 0, y: 12, scale: 0.96 },
   show: { opacity: 1, y: 0, scale: 1, transition: SPRING },
-  exit: { opacity: 0, scale: 0.96, transition: T.instant },
+  exit: { opacity: 0, scale: 0.96, transition: T.fast },
 }
 
 /** Diálogo modal: el panel entra, el fondo solo se funde. */
 export const dialogPanel: Variants = {
   hidden: { opacity: 0, scale: 0.97, y: 8 },
   show: { opacity: 1, scale: 1, y: 0, transition: { ...SPRING, stiffness: 480 } },
-  exit: { opacity: 0, scale: 0.98, transition: T.instant },
+  exit: { opacity: 0, scale: 0.98, transition: T.fast },
 }
 
 export const dialogBackdrop: Variants = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: T.quick },
-  exit: { opacity: 0, transition: T.instant },
+  show: { opacity: 1, transition: T.base },
+  exit: { opacity: 0, transition: T.fast },
 }
 
-/** Elemento que entra o sale de una lista: pasos del reto de ordenar. */
+/** Elemento que entra o sale de una lista. */
 export const listItem: Variants = {
   hidden: { opacity: 0, y: -4 },
-  show: { opacity: 1, y: 0, transition: T.quick },
-  exit: { opacity: 0, y: 4, transition: T.instant },
-}
-
-/** Bloque de explicación tras responder: aparece donde antes no había nada. */
-export const reveal: Variants = {
-  hidden: { opacity: 0, y: 6 },
-  show: { opacity: 1, y: 0, transition: T.smooth },
+  show: { opacity: 1, y: 0, transition: T.base },
+  exit: { opacity: 0, y: 4, transition: T.fast },
 }
 
 /**
- * Escalonado. Se usa solo cuando el orden de aparición significa algo, por
- * ejemplo el mapa, donde la secuencia refuerza que los mundos dependen unos de
- * otros. No se aplica a cada sección de cada pantalla: eso es el tic más
- * reconocible de una interfaz generada.
+ * Bajada de dominio: sobria. El segmento perdido se atenúa y se hunde dos
+ * píxeles. Sin sacudida y sin rojo: se informa, no se castiga.
+ */
+export const masteryDown: Variants = {
+  hidden: { opacity: 1, y: 0 },
+  show: { opacity: 0.35, y: 2, transition: T.slow },
+}
+
+/** Etapa de un pipeline que pasa a su estado final, en secuencia. */
+export const pipelineStage: Variants = {
+  hidden: { opacity: 0, y: 4 },
+  show: { opacity: 1, y: 0, transition: T.base },
+}
+
+/**
+ * Secuencia con significado: etapas del pipeline, capas del mapa. No se
+ * aplica a cada sección de cada pantalla: eso es el tic más reconocible de
+ * una interfaz generada.
  */
 export const staggered: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.025 } },
+  show: { transition: { staggerChildren: 0.06 } },
+}
+
+/**
+ * Recorrido de una dependencia resuelta. La arista es ortogonal, así que se
+ * dibuja con escalas por eje (transform) en vez de animar el trazo: primero el
+ * tramo vertical, luego el horizontal. `custom` es el retraso de cada tramo.
+ */
+export const edgeGrow: Variants = {
+  hidden: (axis: 'x' | 'y') => (axis === 'x' ? { scaleX: 0 } : { scaleY: 0 }),
+  show: (axis: 'x' | 'y') => ({
+    ...(axis === 'x' ? { scaleX: 1 } : { scaleY: 1 }),
+    transition: { ...T.unlock, duration: DURATION.unlock / 2, delay: axis === 'x' ? DURATION.unlock / 2 : 0 },
+  }),
 }
 
 /** Respuesta a la pulsación en superficies grandes, donde no hay hover táctil. */
-export const TAP = { scale: 0.985 } as const
+export const TAP = { scale: 0.98 } as const

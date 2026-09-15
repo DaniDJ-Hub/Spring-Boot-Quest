@@ -122,7 +122,7 @@ export function WorldMap() {
             const p = worldProgress(state, w.id)
             const bossReady = bossAvailable(state, w) && !cleared
             const etiqueta = `Mundo ${w.index}: ${w.title}. ${cleared ? 'Superado.' : open ? `${p.done} de ${p.total} retos resueltos.` : 'Bloqueado.'}`
-            const clases = `block w-full text-left rounded-lg border px-3 py-2.5 transition-colors duration-quick ease-out
+            const clases = `block w-full text-left rounded-lg border px-3 py-2.5 transition-colors duration-fast ease-out
               ${open ? 'border-edge-strong hover:border-accent bg-surface-raised/50' : 'border-edge opacity-60 cursor-not-allowed'}
               ${cleared ? 'border-accent/50' : ''}`
 

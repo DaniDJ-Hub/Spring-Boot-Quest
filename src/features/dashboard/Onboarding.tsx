@@ -47,13 +47,13 @@ export function Onboarding() {
       <div className="flex flex-col sm:flex-row gap-3">
         <Link
           to={{ name: 'mundo', worldId: WORLDS[0].id }}
-          className="inline-flex items-center justify-center min-h-[44px] rounded-md bg-accent px-5 text-body font-semibold text-surface-sunken transition-all duration-instant ease-out hover:bg-accent-bright active:scale-[.98]"
+          className="inline-flex items-center justify-center min-h-[44px] rounded-md bg-accent px-5 text-body font-semibold text-surface-sunken transition-all duration-fast ease-out hover:bg-accent-bright active:scale-[.98]"
         >
           Empezar por {WORLDS[0].title}
         </Link>
         <Link
           to={{ name: 'mapa' }}
-          className="inline-flex items-center justify-center min-h-[44px] rounded-md border border-edge-strong px-5 text-body transition-colors duration-quick ease-out hover:border-accent hover:text-accent"
+          className="inline-flex items-center justify-center min-h-[44px] rounded-md border border-edge-strong px-5 text-body transition-colors duration-fast ease-out hover:border-accent hover:text-accent"
         >
           Ver el mapa completo
         </Link>

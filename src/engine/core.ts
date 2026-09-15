@@ -1,4 +1,4 @@
-import type { ChallengeMeta, GameState, MasteryLevel, World } from '../types'
+import type { ChallengeMeta, ConceptStat, GameState, MasteryLevel, World } from '../types'
 import { CHALLENGE_META, metaOf } from '../data'
 import { WORLDS } from '../data/worlds'
 
@@ -221,7 +221,53 @@ export function levelProgress(xp: number) {
   return { level, floor, ceil, pct: Math.min(100, ((xp - floor) / span) * 100) }
 }
 
+/* ------------------------------- Reglas ---------------------------------
+ * Los umbrales del juego, con nombre. Viven aquí para que la interfaz los lea
+ * en vez de escribirlos a mano: si una regla cambia, cambia en un solo sitio.
+ */
+
+/** Fracción de retos resueltos de un mundo que abre su boss battle. */
+export const BOSS_UNLOCK_RATIO = 0.7
+/** Un concepto es flojo por debajo de este acierto… */
+export const WEAK_ACCURACY = 0.6
+/** …y solo con esta evidencia mínima. */
+export const WEAK_MIN_ATTEMPTS = 2
+/** Conceptos flojos que pesan en el orden de práctica de un mundo. */
+export const ADAPTIVE_WEAK_LIMIT = 12
+/** Conceptos flojos de los que se nutre la sesión de refuerzo. */
+export const REINFORCE_WEAK_LIMIT = 10
+export const REINFORCE_SIZE = 8
+export const EXAM_PER_WORLD = 2
+/** Parte del XP que conserva un reto resuelto con pista. */
+export const HINT_XP_FACTOR = 0.6
+export const EXAM_XP_PER_CORRECT = 12
+
+/** Bono de XP por superar la boss battle de un mundo por primera vez. */
+export function bossBonus(world?: World): number {
+  return world ? 40 + world.index * 10 : 40
+}
+
 /* -------------------------------- Dominio ------------------------------- */
+
+export const MASTERY_ORDER: MasteryLevel[] = ['none', 'basic', 'progress', 'mastered', 'expert']
+
+/** Lo que exige cada nivel. `basic` es el suelo de cualquier concepto intentado. */
+export const MASTERY_RULES = {
+  progress: { minAttempts: 1, minAccuracy: 0.5, minStreak: 0 },
+  mastered: { minAttempts: 3, minAccuracy: 0.75, minStreak: 2 },
+  expert: { minAttempts: 5, minAccuracy: 0.9, minStreak: 4 },
+} as const
+
+export type MasteryRule = (typeof MASTERY_RULES)[keyof typeof MASTERY_RULES]
+
+export function meetsRule(s: ConceptStat, rule: MasteryRule): boolean {
+  return s.attempts >= rule.minAttempts && s.correct / s.attempts >= rule.minAccuracy && s.streak >= rule.minStreak
+}
+
+/** Dominado o experto: lo que la interfaz y los logros llaman «en verde». */
+export function isGreen(level: MasteryLevel): boolean {
+  return level === 'mastered' || level === 'expert'
+}
 
 /**
  * El dominio no se gana contestando una vez: exige aciertos sostenidos.
@@ -230,10 +276,9 @@ export function levelProgress(xp: number) {
 export function masteryOf(state: GameState, concept: string): MasteryLevel {
   const s = state.concepts[concept]
   if (!s || s.attempts === 0) return 'none'
-  const acc = s.correct / s.attempts
-  if (s.attempts >= 5 && acc >= 0.9 && s.streak >= 4) return 'expert'
-  if (s.attempts >= 3 && acc >= 0.75 && s.streak >= 2) return 'mastered'
-  if (acc >= 0.5) return 'progress'
+  if (meetsRule(s, MASTERY_RULES.expert)) return 'expert'
+  if (meetsRule(s, MASTERY_RULES.mastered)) return 'mastered'
+  if (meetsRule(s, MASTERY_RULES.progress)) return 'progress'
   return 'basic'
 }
 
@@ -256,7 +301,7 @@ export function conceptAccuracy(state: GameState, concept: string): number | nul
 /** Conceptos flojos: los que fallas más de lo que aciertas, con evidencia suficiente. */
 export function weakConcepts(state: GameState, limit = 8): string[] {
   return Object.entries(state.concepts)
-    .filter(([, s]) => s.attempts >= 2 && s.correct / s.attempts < 0.6)
+    .filter(([, s]) => s.attempts >= WEAK_MIN_ATTEMPTS && s.correct / s.attempts < WEAK_ACCURACY)
     .sort((a, b) => a[1].correct / a[1].attempts - b[1].correct / b[1].attempts)
     .slice(0, limit)
     .map(([c]) => c)
@@ -280,9 +325,14 @@ export function overallProgress(state: GameState) {
   return { done, total, pct: total ? (done / total) * 100 : 0 }
 }
 
+/** Retos resueltos que hacen falta para abrir la boss de un mundo con `total` retos. */
+export function bossRequired(total: number): number {
+  return Math.ceil(total * BOSS_UNLOCK_RATIO)
+}
+
 export function bossAvailable(state: GameState, world: World): boolean {
   const p = worldProgress(state, world.id)
-  return p.total > 0 && p.done >= Math.ceil(p.total * 0.7)
+  return p.total > 0 && p.done >= bossRequired(p.total)
 }
 
 /* ----------------------------- Selección adaptativa ---------------------- */
@@ -305,23 +355,30 @@ function shuffle<T>(arr: T[], seed = Date.now()): T[] {
  * 3. Retos nuevos, de menor a mayor dificultad.
  * 4. Repaso de lo ya resuelto, al final.
  */
+/** Motivo por el que un reto ocupa su lugar en la práctica, en el mismo orden que su prioridad. */
+export const SELECTION_REASONS = ['failed', 'weak', 'new', 'review'] as const
+export type SelectionReason = (typeof SELECTION_REASONS)[number]
+
+/** Prioridad de un reto en la práctica: 0 fallado, 1 concepto flojo, 2 nuevo, 3 repaso. */
+export function selectionScore(state: GameState, c: ChallengeMeta, weak: Set<string>): number {
+  const solved = (state.solved[c.id] ?? 0) > 0
+  const failed = (state.failed[c.id] ?? 0) > 0
+  if (failed && !solved) return 0
+  if (!solved && c.concepts.some(x => weak.has(x))) return 1
+  if (!solved) return 2
+  return 3
+}
+
 export function nextInWorld(state: GameState, worldId: string): ChallengeMeta[] {
-  const weak = new Set(weakConcepts(state, 12))
+  const weak = new Set(weakConcepts(state, ADAPTIVE_WEAK_LIMIT))
   const list = metaOf(worldId)
-  const score = (c: ChallengeMeta) => {
-    const solved = (state.solved[c.id] ?? 0) > 0
-    const failed = (state.failed[c.id] ?? 0) > 0
-    if (failed && !solved) return 0
-    if (!solved && c.concepts.some(x => weak.has(x))) return 1
-    if (!solved) return 2
-    return 3
-  }
+  const score = (c: ChallengeMeta) => selectionScore(state, c, weak)
   return [...list].sort((a, b) => score(a) - score(b) || a.difficulty - b.difficulty)
 }
 
 /** Sesión de refuerzo: retos que atacan directamente lo que fallas. */
-export function reinforcementSet(state: GameState, size = 8): ChallengeMeta[] {
-  const weak = weakConcepts(state, 10)
+export function reinforcementSet(state: GameState, size = REINFORCE_SIZE): ChallengeMeta[] {
+  const weak = weakConcepts(state, REINFORCE_WEAK_LIMIT)
   if (weak.length === 0) return []
   const weakSet = new Set(weak)
   const unlocked = new Set(WORLDS.filter(w => worldUnlocked(state, w)).map(w => w.id))
@@ -350,7 +407,7 @@ export function bossSet(world: World): ChallengeMeta[] {
 }
 
 /** Examen final: cobertura pareja de los quince mundos. */
-export function examSet(perWorld = 2, seed = Date.now()): ChallengeMeta[] {
+export function examSet(perWorld = EXAM_PER_WORLD, seed = Date.now()): ChallengeMeta[] {
   const out: ChallengeMeta[] = []
   for (const w of WORLDS) {
     const list = [...metaOf(w.id)].sort((a, b) => b.difficulty - a.difficulty)
@@ -366,9 +423,12 @@ export function todayKey(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+export function yesterdayKey(): string {
+  return new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+}
+
 export function bumpStreak(streak: GameState['streak']): GameState['streak'] {
   const today = todayKey()
   if (streak.lastDay === today) return streak
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-  return { count: streak.lastDay === yesterday ? streak.count + 1 : 1, lastDay: today }
+  return { count: streak.lastDay === yesterdayKey() ? streak.count + 1 : 1, lastDay: today }
 }

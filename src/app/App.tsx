@@ -98,7 +98,7 @@ export default function App() {
             aria-valuemax={100}
             className="mt-2 h-1 rounded-full bg-edge-soft overflow-hidden"
           >
-            <div className="h-full bg-accent rounded-full transition-[width] duration-500" style={{ width: `${lp.pct}%` }} />
+            <div className="h-full bg-accent rounded-full transition-[width] duration-slow" style={{ width: `${lp.pct}%` }} />
           </div>
           <p className="text-micro text-fg-tertiary mt-1.5 tnum">{state.xp} XP · racha {state.streak.count}</p>
         </div>

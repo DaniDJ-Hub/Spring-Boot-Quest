@@ -5,47 +5,56 @@
 @tailwind utilities;
 
 @layer base {
-  html { -webkit-text-size-adjust: 100%; }
-  body {
-    @apply bg-surface text-fg font-sans antialiased;
-    background-image:
-      radial-gradient(900px 500px at 15% -10%, rgba(95,168,60,.09), transparent 60%),
-      radial-gradient(700px 400px at 95% 0%, rgba(76,141,217,.07), transparent 60%);
-    background-attachment: fixed;
+  html {
+    -webkit-text-size-adjust: 100%;
+    color-scheme: dark;
   }
+  /* Fondo liso: la jerarquía la dan superficie y borde, no un degradado. */
+  body { @apply bg-surface text-fg font-sans antialiased; }
+
+  /* Foco visible en todo lo interactivo. Contorno en vez de ring: respeta el
+   * radio propio de cada control y no altera su forma. En modo boss la
+   * variable --c-focus cambia al naranja de producción. */
   :focus-visible {
-    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-surface rounded;
+    outline: 2px solid rgb(var(--c-focus));
+    outline-offset: 2px;
   }
-  ::selection { background: rgba(95,168,60,.3); }
-  /* Space Grotesk se sirve en 500/600/700. Fijar el peso aquí evita que un
-   * título herede 400 y el navegador lo sintetice engordando los trazos. */
+  ::selection { background: rgb(var(--c-accent) / 0.3); }
+
+  /* Space Grotesk se sirve en 500/600/700: fijar el peso evita que el
+   * navegador sintetice una negrita. */
   h1, h2, h3 { @apply font-display font-semibold; }
+
+  code, kbd, samp, pre { @apply font-mono; }
 }
 
 @layer base {
-  /* Mismo motivo: la utilidad font-display nunca debe quedarse sin peso.
-   * Va en la capa base, así que font-bold o font-medium siguen ganando. */
   .font-display { font-weight: 600; }
 }
 
 @layer components {
-  .panel { @apply bg-surface-raised/70 border border-edge rounded-lg; }
-  .rule  { @apply border-edge; }
+  /* Nivel 1 de elevación: panel sobre el fondo. */
+  .panel { @apply bg-surface-raised border border-edge rounded-lg; }
+  /* Nivel 3: solo lo que flota por encima de todo. */
+  .float { @apply bg-surface-overlay border border-edge-strong rounded-lg shadow-float; }
   .tnum  { font-variant-numeric: tabular-nums; }
+  .kbd   { @apply inline-flex items-center rounded-sm border border-edge-strong px-1 font-mono text-micro text-fg-secondary; }
 }
 
-/* Movimiento reducido. Esto solo alcanza a las animaciones y transiciones de
- * CSS; lo que anima Motion con JavaScript se desactiva con MotionConfig
- * reducedMotion="user" en main.tsx. Hacen falta las dos piezas. */
+/* Movimiento reducido. Solo alcanza a CSS; Motion se desactiva con
+ * MotionConfig reducedMotion="user" en main.tsx. La cuenta de iteraciones se
+ * fija a 1: sin eso, una animación infinita con duración mínima parpadea a la
+ * frecuencia de refresco, justo para quien pidió menos movimiento. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
     scroll-behavior: auto !important;
   }
 }
 
-/* Scrollbar discreto, alineado con el tema */
-* { scrollbar-width: thin; scrollbar-color: #333D61 transparent; }
+/* Scrollbar discreto, con los tokens del tema */
+* { scrollbar-width: thin; scrollbar-color: rgb(var(--c-edge)) transparent; }
 *::-webkit-scrollbar { width: 8px; height: 8px; }
-*::-webkit-scrollbar-thumb { background: #333D61; border-radius: 4px; }
+*::-webkit-scrollbar-thumb { background: rgb(var(--c-edge)); border-radius: 4px; }

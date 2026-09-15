@@ -90,7 +90,7 @@ export function Bar({ pct, tone = 'accent', height = 'h-1.5', label }: {
     : { 'aria-hidden': true }
   return (
     <div className={`w-full ${height} rounded-full bg-edge-soft overflow-hidden`} {...a11y}>
-      <div className={`${bg} h-full rounded-full transition-[width] duration-500`} style={{ width: `${value}%` }} />
+      <div className={`${bg} h-full rounded-full transition-[width] duration-slow`} style={{ width: `${value}%` }} />
     </div>
   )
 }
@@ -145,7 +145,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       onClick={onClick}
       disabled={disabled}
       className={`inline-flex items-center justify-center min-h-[44px] rounded-md px-4 py-2 text-body
-        transition-all duration-instant ease-out disabled:opacity-40 disabled:pointer-events-none ${styles} ${className}`}
+        transition-all duration-fast ease-out disabled:opacity-40 disabled:pointer-events-none ${styles} ${className}`}
     >
       {children}
     </button>

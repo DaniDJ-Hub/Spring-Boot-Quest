@@ -19,7 +19,7 @@ function Check({ label, done, onToggle }: { label: string; done: boolean; onTogg
       >
         <span
           aria-hidden="true"
-          className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-sm border transition-colors duration-instant
+          className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-sm border transition-colors duration-fast
             ${done ? 'bg-accent border-accent text-surface-sunken' : 'border-edge-strong group-hover:border-accent'}`}
         >
           {done ? '✓' : ''}
