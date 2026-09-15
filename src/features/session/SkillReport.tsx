@@ -95,7 +95,7 @@ export function SkillReport({ onBack, onRetake }: { onBack: () => void; onRetake
 
       <div className="flex gap-3">
         <Button onClick={onBack}>Volver al panel</Button>
-        <Button variant="ghost" onClick={onRetake}>Repetir el examen</Button>
+        <Button variant="secondary" onClick={onRetake}>Repetir el examen</Button>
       </div>
     </div>
   )

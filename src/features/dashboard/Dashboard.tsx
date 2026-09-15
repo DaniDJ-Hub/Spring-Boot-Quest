@@ -100,7 +100,7 @@ export function Dashboard() {
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-body text-fg-secondary">Conceptos que fallas más de lo que aciertas</h2>
-          {weak.length > 0 && <Button variant="ghost" onClick={() => navigate({ name: 'refuerzo' })} className="!py-1 !px-3 text-caption">Sesión de refuerzo</Button>}
+          {weak.length > 0 && <Button variant="secondary" onClick={() => navigate({ name: 'refuerzo' })} className="!py-1 !px-3 text-caption">Sesión de refuerzo</Button>}
         </div>
         <div className="panel p-4">
           {weak.length === 0 ? (
@@ -163,7 +163,7 @@ export function Dashboard() {
                   Último resultado: {state.exam.score} de {state.exam.total} ·{' '}
                   {Math.round((state.exam.score / Math.max(1, state.exam.total)) * 100)} %
                 </p>
-                <Button variant="ghost" onClick={() => navigate({ name: 'examen' })}>Ver el reporte o repetirlo</Button>
+                <Button variant="secondary" onClick={() => navigate({ name: 'examen' })}>Ver el reporte o repetirlo</Button>
               </>
             ) : (
               <>

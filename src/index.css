@@ -39,6 +39,8 @@
   .float { @apply bg-surface-overlay border border-edge-strong rounded-lg shadow-float; }
   .tnum  { font-variant-numeric: tabular-nums; }
   .kbd   { @apply inline-flex items-center rounded-sm border border-edge-strong px-1 font-mono text-micro text-fg-secondary; }
+  /* Segmento de arista del grafo: escala desde su propio extremo, no desde el lienzo. */
+  [data-edge-segment] { transform-box: fill-box; }
 }
 
 /* Movimiento reducido. Solo alcanza a CSS; Motion se desactiva con

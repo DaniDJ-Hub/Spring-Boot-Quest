@@ -112,16 +112,22 @@ export const staggered: Variants = {
   show: { transition: { staggerChildren: 0.06 } },
 }
 
+/** Tramo de una arista ortogonal: eje en el que crece y orden dentro del recorrido. */
+export interface EdgeSegment { axis: 'x' | 'y'; step: 0 | 1 | 2 }
+
+/** Duración de cada uno de los tres tramos de una arista. */
+export const EDGE_STEP = DURATION.unlock / 3
+
 /**
- * Recorrido de una dependencia resuelta. La arista es ortogonal, así que se
- * dibuja con escalas por eje (transform) en vez de animar el trazo: primero el
- * tramo vertical, luego el horizontal. `custom` es el retraso de cada tramo.
+ * Recorrido de una dependencia resuelta. La arista es ortogonal (baja, cruza,
+ * baja), así que se dibuja con escalas por eje —transform— en vez de animar el
+ * trazo. Los tres tramos suman la duración de `unlock`.
  */
 export const edgeGrow: Variants = {
-  hidden: (axis: 'x' | 'y') => (axis === 'x' ? { scaleX: 0 } : { scaleY: 0 }),
-  show: (axis: 'x' | 'y') => ({
+  hidden: ({ axis }: EdgeSegment) => (axis === 'x' ? { scaleX: 0 } : { scaleY: 0 }),
+  show: ({ axis, step }: EdgeSegment) => ({
     ...(axis === 'x' ? { scaleX: 1 } : { scaleY: 1 }),
-    transition: { ...T.unlock, duration: DURATION.unlock / 2, delay: axis === 'x' ? DURATION.unlock / 2 : 0 },
+    transition: { duration: EDGE_STEP, ease: 'linear', delay: step * EDGE_STEP },
   }),
 }
 

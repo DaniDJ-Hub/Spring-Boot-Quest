@@ -135,7 +135,7 @@ export function WorldView({ worldId }: { worldId: string }) {
           )}
           <div className="mt-5 flex gap-3">
             <Button onClick={() => { setMode('overview'); setBossDone(false) }}>Volver al mundo</Button>
-            {!passed && <Button variant="ghost" onClick={startPractice}>Practicar antes</Button>}
+            {!passed && <Button variant="secondary" onClick={startPractice}>Practicar antes</Button>}
           </div>
         </div>
       </div>

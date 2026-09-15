@@ -61,7 +61,7 @@ export function Exam() {
         </p>
         <div className="flex gap-3">
           <Button onClick={() => setStarted(true)}>Empezar</Button>
-          <Button variant="ghost" onClick={() => navigate({ name: 'panel' })}>Ahora no</Button>
+          <Button variant="secondary" onClick={() => navigate({ name: 'panel' })}>Ahora no</Button>
         </div>
       </div>
     )

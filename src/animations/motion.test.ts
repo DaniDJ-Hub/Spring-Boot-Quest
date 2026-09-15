@@ -4,7 +4,8 @@ import * as A from './motion'
 
 const ext = (config as unknown as { theme: { extend: Record<string, unknown> } }).theme.extend
 const tw = ext.transitionDuration as Record<string, string>
-const NO_VARIANTES = new Set(['DURATION', 'EASE_OUT', 'EASE_IN_OUT', 'T', 'SPRING', 'TAP'])
+const NO_VARIANTES = new Set(['DURATION', 'EASE_OUT', 'EASE_IN_OUT', 'T', 'SPRING', 'TAP', 'EDGE_STEP'])
+const TRAMOS = [{ axis: 'y', step: 0 }, { axis: 'x', step: 1 }, { axis: 'y', step: 2 }]
 
 describe('lenguaje de movimiento (M-2)', () => {
   it('las duraciones coinciden con los tokens de Tailwind', () => {
@@ -25,9 +26,9 @@ describe('lenguaje de movimiento (M-2)', () => {
   })
 
   it('todas las variantes usan la escala, sin duraciones sueltas', () => {
-    const permitidas = new Set<number>([...Object.values(A.DURATION), A.DURATION.unlock / 2])
+    const permitidas = new Set<number>([...Object.values(A.DURATION), A.EDGE_STEP])
     const revisar = (v: unknown) => {
-      if (typeof v === 'function') { revisar(v('x')); revisar(v('y')); return }
+      if (typeof v === 'function') { for (const t of TRAMOS) revisar(v(t)); return }
       if (typeof v !== 'object' || v === null) return
       const o = v as Record<string, unknown>
       const t = o.transition as Record<string, unknown> | undefined
@@ -43,7 +44,7 @@ describe('lenguaje de movimiento (M-2)', () => {
   it('solo se animan transform y opacity', () => {
     const permitidas = new Set(['opacity', 'x', 'y', 'scale', 'scaleX', 'scaleY', 'transition'])
     const revisarEstado = (estado: unknown) => {
-      const e = typeof estado === 'function' ? { ...estado('x'), ...estado('y') } : estado
+      const e = typeof estado === 'function' ? Object.assign({}, ...TRAMOS.map(t => estado(t))) : estado
       if (typeof e !== 'object' || e === null) return
       for (const k of Object.keys(e)) expect(permitidas.has(k), k).toBe(true)
     }
