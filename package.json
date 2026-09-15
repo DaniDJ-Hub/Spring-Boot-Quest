@@ -5,11 +5,22 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/generate-meta.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "gen": "node scripts/generate-meta.mjs",
+    "check": "npm run gen && npm run tokens && npm run typecheck && npm run lint && npm run test",
+    "tokens": "node scripts/check-tokens.mjs"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.1.1",
+    "@fontsource/jetbrains-mono": "^5.1.2",
+    "@fontsource/space-grotesk": "^5.1.1",
+    "motion": "^11.15.0",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
@@ -17,10 +28,19 @@
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "@vitejs/plugin-react": "4.3.4",
+    "@vitest/coverage-v8": "^2.1.8",
     "autoprefixer": "10.4.20",
+    "esbuild": "^0.21.5",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "jsdom": "^25.0.1",
     "postcss": "8.4.49",
     "tailwindcss": "3.4.17",
     "typescript": "5.6.3",
-    "vite": "5.4.11"
+    "typescript-eslint": "^8.18.2",
+    "vite": "5.4.11",
+    "vitest": "^2.1.8"
   }
 }

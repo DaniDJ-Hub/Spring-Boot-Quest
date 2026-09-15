@@ -61,6 +61,20 @@ export interface FillChallenge extends BaseChallenge {
 
 export type Challenge = ChoiceChallenge | OrderChallenge | FillChallenge
 
+/**
+ * Vista ligera de un reto. Es lo único que el motor necesita para calcular
+ * progreso, dominio, logros y el orden adaptativo, así que puede estar siempre
+ * en memoria mientras el contenido pesado se carga bajo demanda.
+ */
+export interface ChallengeMeta {
+  id: string
+  worldId: string
+  kind: ChallengeKind
+  difficulty: Difficulty
+  xp: number
+  concepts: string[]
+}
+
 export interface World {
   id: string
   index: number
@@ -126,5 +140,10 @@ export interface GameState {
   log: AttemptLog[]
   streak: { count: number; lastDay: string }
   exam: null | { score: number; total: number; at: number; byWorld: Record<string, [number, number]> }
+  /** Conceptos que alguna vez estuvieron en rojo. Vive en el estado, no en un ref,
+   *  para que el logro de recuperación sobreviva a una recarga. */
+  everRed: string[]
+  /** Aciertos seguidos sin pedir pista. En el estado por la misma razón. */
+  noHintRun: number
   createdAt: number
 }

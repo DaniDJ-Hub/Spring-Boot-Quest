@@ -1,19 +1,16 @@
-import type { Achievement, Challenge, ProjectBrief } from '../types'
-import { CH_01 } from './challenges-01'
-import { CH_02 } from './challenges-02'
-import { CH_03 } from './challenges-03'
-import { CH_04 } from './challenges-04'
-import { CH_05 } from './challenges-05'
-import { CH_06 } from './challenges-06'
+import type { Achievement, ChallengeMeta, ProjectBrief } from '../types'
+import { CHALLENGE_META } from './challenge-meta.generated'
 
-export const CHALLENGES: Challenge[] = [...CH_01, ...CH_02, ...CH_03, ...CH_04, ...CH_05, ...CH_06]
+export { CHALLENGE_META }
+export * from './loader'
 
-export const CHALLENGE_BY_ID: Record<string, Challenge> = Object.fromEntries(
-  CHALLENGES.map(c => [c.id, c]),
+export const META_BY_ID: Record<string, ChallengeMeta> = Object.fromEntries(
+  CHALLENGE_META.map(c => [c.id, c]),
 )
 
-export function challengesOf(worldId: string): Challenge[] {
-  return CHALLENGES.filter(c => c.worldId === worldId)
+/** Metadatos de los retos de un mundo. Sincrónico: no descarga nada. */
+export function metaOf(worldId: string): ChallengeMeta[] {
+  return CHALLENGE_META.filter(c => c.worldId === worldId)
 }
 
 /**

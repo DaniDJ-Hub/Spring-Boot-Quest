@@ -1,3 +1,5 @@
+@import './styles/fonts.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,33 +7,45 @@
 @layer base {
   html { -webkit-text-size-adjust: 100%; }
   body {
-    @apply bg-ink text-chalk font-sans antialiased;
+    @apply bg-surface text-fg font-sans antialiased;
     background-image:
       radial-gradient(900px 500px at 15% -10%, rgba(95,168,60,.09), transparent 60%),
       radial-gradient(700px 400px at 95% 0%, rgba(76,141,217,.07), transparent 60%);
     background-attachment: fixed;
   }
   :focus-visible {
-    @apply outline-none ring-2 ring-leaf ring-offset-2 ring-offset-ink rounded;
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-surface rounded;
   }
   ::selection { background: rgba(95,168,60,.3); }
-  h1, h2, h3 { @apply font-display; }
+  /* Space Grotesk se sirve en 500/600/700. Fijar el peso aquí evita que un
+   * título herede 400 y el navegador lo sintetice engordando los trazos. */
+  h1, h2, h3 { @apply font-display font-semibold; }
+}
+
+@layer base {
+  /* Mismo motivo: la utilidad font-display nunca debe quedarse sin peso.
+   * Va en la capa base, así que font-bold o font-medium siguen ganando. */
+  .font-display { font-weight: 600; }
 }
 
 @layer components {
-  .panel { @apply bg-ink-panel/70 border border-line rounded-lg; }
-  .rule  { @apply border-line; }
+  .panel { @apply bg-surface-raised/70 border border-edge rounded-lg; }
+  .rule  { @apply border-edge; }
   .tnum  { font-variant-numeric: tabular-nums; }
 }
 
+/* Movimiento reducido. Esto solo alcanza a las animaciones y transiciones de
+ * CSS; lo que anima Motion con JavaScript se desactiva con MotionConfig
+ * reducedMotion="user" en main.tsx. Hacen falta las dos piezas. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .01ms !important;
     transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
 /* Scrollbar discreto, alineado con el tema */
-* { scrollbar-width: thin; scrollbar-color: #2E3757 transparent; }
+* { scrollbar-width: thin; scrollbar-color: #333D61 transparent; }
 *::-webkit-scrollbar { width: 8px; height: 8px; }
-*::-webkit-scrollbar-thumb { background: #2E3757; border-radius: 4px; }
+*::-webkit-scrollbar-thumb { background: #333D61; border-radius: 4px; }
