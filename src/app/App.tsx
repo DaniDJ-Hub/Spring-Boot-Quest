@@ -9,6 +9,7 @@ import { Exam } from '../features/session/Exam'
 import { Projects } from '../features/projects/Projects'
 import { Achievements } from '../features/achievements/Achievements'
 import { SettingsDialog } from '../features/settings/SettingsDialog'
+import { LevelUp } from '../features/settings/LevelUp'
 import { Button, Callout, cx, Icon, LevelBadge, Toasts, XpBar } from '../components/ui'
 import type { IconName } from '../components/ui'
 import { ErrorBoundary } from '../components/ErrorBoundary'
@@ -183,6 +184,7 @@ export default function App() {
 
         <Toasts items={toasts} dismiss={dismissToast} />
         <SettingsDialog open={settings} onClose={() => setSettings(false)} />
+        <LevelUp immersive={immersive} />
       </div>
     </ChromeContext.Provider>
   )

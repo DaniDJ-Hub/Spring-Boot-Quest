@@ -43,18 +43,20 @@ en cursos aparte. Ninguno de esos temas se inventó aquí. El reporte final los 
 reales, arquitectura, decisión profesional con consecuencias, ordenar un flujo y completar código
 escribiendo la anotación.
 
-**Dominio por concepto.** Cada uno de los 85 conceptos tiene un nivel que exige aciertos sostenidos:
+**Dominio por concepto.** Cada uno de los 102 conceptos tiene un nivel que exige aciertos sostenidos:
 no dominado → básico → en progreso → dominado → experto. Un fallo rompe la racha, así que un concepto
-puede bajar de nivel.
+puede bajar de nivel. El medidor lo muestra con segmentos y etiqueta, no solo con color, y una bajada
+se anuncia con su motivo y con el camino para recuperarla.
 
 **Práctica adaptativa.** Dentro de un mundo, los retos se ordenan solos: primero lo que fallaste, luego
 lo que toca tus conceptos flojos, después lo nuevo por dificultad, y al final el repaso. La sesión de
 refuerzo del panel se arma solo con conceptos por debajo del 60 % de aciertos.
 
-**Boss battles.** Cada mundo tiene una, con un reto de cada tipo disponible priorizando los más difíciles.
-Sin pistas y sin explicaciones hasta el final. Se abre al resolver el 70 % del mundo y hay que superar
-entre el 75 % y el 85 % según el mundo. Superarla desbloquea los mundos que dependen de él.
-3
+**Boss battles.** Cada mundo tiene una, presentada como un despliegue a producción: etapas de pipeline,
+sin pistas y sin corrección hasta el final, donde aparece el resultado con la revisión de cada etapa.
+Se abre al resolver el 70 % del mundo y hay que superar entre el 75 % y el 85 % según el mundo.
+Superarla resuelve la dependencia y abre los mundos que cuelgan de ella.
+
 **Proyectos.** Siete briefs para construir en tu IDE, con requisitos y criterios de aceptación. No son
 simulaciones: el checklist se guarda, el código lo escribes tú.
 
@@ -110,24 +112,37 @@ Un reto nuevo es un objeto en `src/data/challenges/wNN.ts`, tipado según su `ki
 npm run check
 ```
 
-Regenera el índice y pasa las 94 pruebas, que comprueban entre otras cosas que la respuesta correcta
+Regenera el índice y pasa las pruebas, que comprueban entre otras cosas que la respuesta correcta
 existe entre las opciones, que los retos de ordenar no repiten pasos y que ningún concepto declarado en
 un mundo se queda sin reto.
 
+## Reglas del juego y la interfaz
+
+Los umbrales viven en `engine/core.ts` con nombre (`BOSS_UNLOCK_RATIO`, `WEAK_ACCURACY`,
+`MASTERY_RULES`, `HINT_XP_FACTOR`…) y `engine/selectors.ts` los expone en forma de preguntas:
+estado de un mundo, puerta de la boss, motivo por el que aparece un reto, avance de un logro, racha
+vigente, disponibilidad del examen o estado de un proyecto. **Ninguna pantalla escribe un umbral ni
+recalcula una regla**: si el 70 % cambia, cambia en un sitio y la interfaz lo cuenta sola.
+
 ## Design system
 
-Los tokens están en `tailwind.config.js` y son semánticos, no por tinte: `surface`, `edge`, `fg`,
-`accent`, `warning`, `danger`, `info`, más una escala propia para el dominio de conceptos. Si el verde
-cambia mañana, se cambia en un sitio y nada llamado `accent` deja de tener sentido.
+La paleta vive en `src/styles/palette.js`, en hex y en un solo sitio. `tailwind.config.js` la sirve
+como variables CSS con canal de opacidad, así que un modo puede redefinir superficies dentro de un
+contenedor: eso es lo que hace la boss battle con `data-mode="boss"`. Los tokens son semánticos, no
+por tinte: `surface`, `edge`, `fg`, `accent` (verde Spring), `warning`, `danger`, `info`, `locked`,
+`boss` (naranja Java), más escalas propias para el dominio de conceptos y la rareza de los logros.
 
-- **Tipografía**: siete pasos (`micro` 11 → `h1` 32) y ninguno más. `npm run tokens` falla si aparece
-  un `text-[13px]` suelto o un `text-sm` fuera de la escala.
-- **Radio**: `sm` 4px para chips, `md` 8px para controles, `lg` 12px para paneles. El radio crece con
-  el tamaño del elemento.
-- **Elevación**: no hay sombras. La jerarquía la dan el fondo y el borde, que es coherente con la
-  estética de herramienta de desarrollo.
-- **Movimiento**: `duration-instant` 90ms para pulsaciones, `quick` 160ms para cambios de estado,
-  `smooth` 260ms para entradas, con una sola curva.
+- **Tipografía**: nueve pasos (`micro` 11 → `display` 44) y ninguno más. `npm run tokens` falla si
+  aparece un `text-[13px]` suelto o un `text-sm` fuera de la escala. El código va a 14 px: es lo que
+  más se lee.
+- **Radio**: `sm` 4px, `md` 6px, `lg` 10px. El radio crece con el tamaño del elemento.
+- **Elevación**: superficie y borde. La única sombra (`shadow-float`) es para lo que flota por encima
+  de todo: avisos y diálogos.
+- **Movimiento**: `duration-fast` 150ms, `base` 250ms, `slow` 400ms y `unlock` 550ms, reservado al
+  recorrido de una dependencia resuelta.
+- **Contraste**: todos los tokens de texto cumplen AA sobre las cuatro superficies, en el modo normal
+  y en el de boss, verificado por pruebas sobre los valores reales de la paleta. Lo deshabilitado y lo
+  bloqueado nunca se marcan con opacidad, que es lo que rompía el contraste.
 
 `scripts/check-tokens.mjs` recorre el código y falla si alguna clase apunta a un token inexistente.
 Es la red que el resto de la cadena no da: una clase mal escrita compila, pasa las pruebas y

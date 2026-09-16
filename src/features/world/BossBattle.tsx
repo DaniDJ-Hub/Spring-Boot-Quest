@@ -5,6 +5,7 @@ import { CONCEPT_LABEL } from '../../data/worlds'
 import { useGameActions, useGameState } from '../../engine/game-context'
 import { bossSet, masteryOf } from '../../engine/core'
 import { bossGate, bossPassed, worldDependents } from '../../engine/selectors'
+import { playCue } from '../../app/sound'
 import { useChallengeSet } from '../../hooks/useChallengeSet'
 import { ChallengeRunner } from '../challenge/ChallengeRunner'
 import { Pipeline } from '../challenge/Pipeline'
@@ -51,7 +52,9 @@ export function BossBattle({ world, onExit, onPractice }: { world: World; onExit
   function finish() {
     if (cursor + 1 < queue.length) { setCursor(cursor + 1); return }
     const ok = given.filter(g => g.correct).length
-    if (bossPassed(world, ok, given.length)) clearBoss(world.id, ok === given.length)
+    const win = bossPassed(world, ok, given.length)
+    if (win) clearBoss(world.id, ok === given.length)
+    playCue(win ? 'unlock' : 'wrong')
     setPhase('result')
   }
 

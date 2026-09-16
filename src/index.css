@@ -56,6 +56,24 @@
   }
 }
 
+/* Impresión: el Skill Report se lleva en papel o en PDF. Fondo blanco, texto
+ * negro, sin navegación ni botones, y cada sección sin partirse entre páginas. */
+@media print {
+  @page { margin: 16mm; }
+  :root { color-scheme: light; }
+  body { background: #fff !important; color: #000 !important; }
+  aside, header, nav, [role="status"], [role="dialog"] { display: none !important; }
+  main { padding: 0 !important; }
+  .panel, .float {
+    background: #fff !important;
+    border-color: #999 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  .panel * { color: #000 !important; }
+  a { text-decoration: underline; }
+}
+
 /* Scrollbar discreto, con los tokens del tema */
 * { scrollbar-width: thin; scrollbar-color: rgb(var(--c-edge)) transparent; }
 *::-webkit-scrollbar { width: 8px; height: 8px; }

@@ -5,6 +5,7 @@ import { CONCEPT_LABEL } from '../../data/worlds'
 import { useGameActions, useGameState } from '../../engine/game-context'
 import { masteryDelta } from '../../engine/selectors'
 import type { SelectionReason } from '../../engine/selectors'
+import { playCue } from '../../app/sound'
 import { useChallengeSet } from '../../hooks/useChallengeSet'
 import { ChallengeRunner } from '../challenge/ChallengeRunner'
 import { LoadError, LoadingBlock } from '../../components/Loading'
@@ -74,6 +75,7 @@ export function PracticeRound({ title, subtitle, tone = 'neutral', selection, re
           onResolved={(ok, usedHint) => {
             beforeAnswer.current = state
             answer(current, ok, usedHint)
+            playCue(ok ? 'correct' : 'wrong')
             setResults(r => [...r, ok])
             setAnswered(a => [...a, current])
           }}

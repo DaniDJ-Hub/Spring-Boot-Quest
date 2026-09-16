@@ -1,6 +1,8 @@
 import { useId, useState } from 'react'
 import { useGameActions, useGameState } from '../../engine/game-context'
-import { Button, Dialog, Icon } from '../../components/ui'
+import { setPrefs, usePrefs } from '../../app/prefs'
+import { playCue } from '../../app/sound'
+import { Button, cx, Dialog, Icon } from '../../components/ui'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { Backup } from '../achievements/Backup'
 
@@ -11,6 +13,7 @@ import { Backup } from '../achievements/Backup'
 export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { state } = useGameState()
   const { reset } = useGameActions()
+  const prefs = usePrefs()
   const titleId = useId()
   const [confirming, setConfirming] = useState(false)
 
@@ -27,6 +30,26 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
           </div>
           <Button variant="ghost" size="sm" className="ml-auto" onClick={onClose} icon="x" aria-label="Cerrar ajustes">Cerrar</Button>
         </div>
+
+        <section className="mb-4 rounded-md border border-edge bg-surface-raised p-5">
+          <h3 className="mb-1 text-body font-semibold">Sonido</h3>
+          <p className="mb-4 text-caption leading-relaxed text-fg-secondary">
+            Señales cortas al acertar, fallar o desbloquear. Apagado por defecto.
+          </p>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={prefs.sound}
+            onClick={() => { setPrefs({ sound: !prefs.sound }); if (!prefs.sound) playCue('correct') }}
+            className="inline-flex min-h-[44px] items-center gap-3 rounded-md border border-edge-strong px-3 text-body hover:border-accent"
+          >
+            <Icon name={prefs.sound ? 'volume' : 'volume-off'} size={18} className={prefs.sound ? 'text-accent' : 'text-fg-tertiary'} />
+            {prefs.sound ? 'Sonido encendido' : 'Sonido apagado'}
+            <span aria-hidden="true" className={cx('ml-2 h-5 w-9 rounded-full border p-0.5', prefs.sound ? 'border-accent bg-accent-dim' : 'border-edge-strong')}>
+              <span className={cx('block h-3.5 w-3.5 rounded-full transition-transform duration-fast', prefs.sound ? 'translate-x-4 bg-accent' : 'bg-fg-tertiary')} />
+            </span>
+          </button>
+        </section>
 
         <Backup />
 
