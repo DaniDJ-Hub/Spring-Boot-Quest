@@ -33,7 +33,7 @@ export function Badge({ children, tone = 'neutral', icon, variant = 'tag', class
     <span
       className={cx(
         'inline-flex max-w-full items-center gap-1 whitespace-nowrap rounded-sm border px-2 py-0.5 text-micro',
-        variant === 'tag' ? 'font-mono uppercase tracking-wide' : 'font-sans',
+        variant === 'tag' ? 'font-mono' : 'font-sans',
         TONE[tone],
         className,
       )}

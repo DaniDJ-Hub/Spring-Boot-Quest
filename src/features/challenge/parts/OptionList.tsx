@@ -93,7 +93,7 @@ export function OptionList({ options, picked, answerId, phase, onPick, labelledB
           >
             <span aria-hidden="true" className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center">{mark}</span>
             <span className="min-w-0 flex-1">
-              <span className="mb-1 flex items-center gap-2 font-mono text-micro uppercase tracking-wide text-fg-tertiary">
+              <span className="mb-1 flex items-center gap-2 font-mono text-micro text-fg-tertiary">
                 {prefix} {LETTERS[i]}
                 {phase === 'recorded' && isPicked && (
                   <span className="rounded-sm border border-edge-strong px-1 normal-case tracking-normal text-fg-secondary">tu elección</span>

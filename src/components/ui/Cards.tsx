@@ -119,11 +119,11 @@ export function ChallengeCard({ meta, reason, record, onPlay, disabled }: {
           <span className="text-body text-fg">{kind.label}</span>
           {reason && <ReasonBadge reason={reason} />}
         </span>
-        <span className="mt-1 block truncate text-caption text-fg-secondary">
-          {meta.concepts.map(k => CONCEPT_LABEL[k] ?? k).join(' · ')}
+        <span className="mt-1 block truncate text-caption text-fg-secondary" title={meta.concepts.map(k => CONCEPT_LABEL[k] ?? k).join(', ')}>
+          {meta.concepts.map(k => CONCEPT_LABEL[k] ?? k).join(', ')}
         </span>
         <span className="mt-2 flex items-center gap-3 font-mono text-micro text-fg-tertiary">
-          <span>{meta.id}</span>
+          <span translate="no">{meta.id}</span>
           <DifficultyPips value={meta.difficulty} />
           <span className="tnum">+{meta.xp} XP</span>
         </span>

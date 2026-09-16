@@ -21,7 +21,7 @@ export function PatchView({ original, patch }: { original: string; patch: string
   const hasChanges = diff.rows.some(r => r.sign !== ' ')
 
   return (
-    <pre className="mt-2 overflow-x-auto rounded-sm border border-edge bg-surface-sunken py-2 font-mono text-code">
+    <pre translate="no" className="mt-2 overflow-x-auto rounded-sm border border-edge bg-surface-sunken py-2 font-mono text-code">
       {!hasChanges && <span className="block px-3 pb-1 font-sans text-micro text-fg-tertiary">Fragmento propuesto</span>}
       {diff.rows.map((r, i) => (
         <div key={i} className={cx('flex min-w-max pr-3', SIGN_CLASS[r.sign])}>

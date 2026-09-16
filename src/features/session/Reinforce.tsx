@@ -42,7 +42,7 @@ export function Reinforce() {
       key={round}
       title="Sesión de refuerzo"
       tone="info"
-      subtitle={`${selection.length} retos sobre lo que fallas: ${objetivo.join(' · ')}`}
+      subtitle={`${selection.length} retos sobre lo que fallas: ${objetivo.join(', ')}`}
       selection={selection}
       reasons={Object.fromEntries(selection.map(m => [m.id, 'weak' as const]))}
       loadingLabel="Preparando tu sesión de refuerzo"

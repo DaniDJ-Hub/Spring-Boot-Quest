@@ -117,7 +117,13 @@ export function SortableSteps({ steps, correct, onChange, phase, labelledBy }: {
       <p id={`${labelledBy}-help`} className="mb-3 text-caption text-fg-secondary">
         Arrastra desde el asa, usa las flechas o los botones. Con teclado: Espacio en el asa para agarrar un paso.
       </p>
-      <ol aria-labelledby={labelledBy} aria-describedby={`${labelledBy}-help`} className="space-y-2">
+      {/* Mientras se arrastra no se selecciona texto: si no, el gesto acaba
+          pintando de azul el enunciado del paso. */}
+      <ol
+        aria-labelledby={labelledBy}
+        aria-describedby={`${labelledBy}-help`}
+        className={cx('space-y-2', dragging && 'select-none')}
+      >
         {steps.map((s, i) => {
           const expected = correct.indexOf(s)
           const ok = phase === 'revealed' && expected === i
@@ -160,13 +166,14 @@ export function SortableSteps({ steps, correct, onChange, phase, labelledBy }: {
                 </span>
               )}
               {!locked && (
-                <span className="flex shrink-0 border-l border-edge md:flex-col">
+                // Separación entre los dos objetivos táctiles: pegados, el dedo falla.
+                <span className="flex shrink-0 items-center gap-2 border-l border-edge p-2 md:flex-col md:gap-2">
                   <button
                     type="button"
                     onClick={() => relocate(i, i - 1, false)}
                     disabled={i === 0}
                     aria-label={`Subir «${s}»`}
-                    className="grid h-full min-h-[44px] w-11 place-items-center text-fg-secondary hover:bg-surface-overlay hover:text-fg disabled:text-edge-strong md:h-1/2 md:min-h-[24px] md:w-9"
+                    className="grid h-11 w-11 place-items-center rounded-md border border-edge text-fg-secondary hover:bg-surface-overlay hover:text-fg disabled:border-transparent disabled:text-edge-strong md:h-8 md:w-8"
                   >
                     <Icon name="chevron-up" size={16} />
                   </button>
@@ -175,7 +182,7 @@ export function SortableSteps({ steps, correct, onChange, phase, labelledBy }: {
                     onClick={() => relocate(i, i + 1, false)}
                     disabled={i === n - 1}
                     aria-label={`Bajar «${s}»`}
-                    className="grid h-full min-h-[44px] w-11 place-items-center border-l border-edge text-fg-secondary hover:bg-surface-overlay hover:text-fg disabled:text-edge-strong md:h-1/2 md:min-h-[24px] md:w-9 md:border-l-0 md:border-t"
+                    className="grid h-11 w-11 place-items-center rounded-md border border-edge text-fg-secondary hover:bg-surface-overlay hover:text-fg disabled:border-transparent disabled:text-edge-strong md:h-8 md:w-8"
                   >
                     <Icon name="chevron-down" size={16} />
                   </button>

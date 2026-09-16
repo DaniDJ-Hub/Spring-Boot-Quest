@@ -39,7 +39,7 @@ export function LogViewer({ code, label = 'consola' }: { code: string; label?: s
         <span className="font-mono text-micro text-fg-secondary">{label}</span>
         <span className="ml-auto font-mono text-micro uppercase text-fg-tertiary">log</span>
       </figcaption>
-      <pre className="overflow-x-auto py-3 font-mono text-code">
+      <pre translate="no" className="overflow-x-auto py-3 font-mono text-code">
         {blocks.map((b, i) => {
           if (b.type === 'line') return <Row key={i} line={b.line} />
           if (b.lines.length < 2) return <Row key={i} line={b.lines[0]} />

@@ -25,7 +25,7 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
           <div>
             <h2 id={titleId} className="text-h3">Ajustes</h2>
             <p className="text-caption text-fg-secondary">
-              {state.xp} XP · {state.bossCleared.length} mundos superados · {state.achievements.length} logros
+              {state.xp} XP, {state.bossCleared.length} mundos superados y {state.achievements.length} logros
             </p>
           </div>
           <Button variant="ghost" size="sm" className="ml-auto" onClick={onClose} icon="x" aria-label="Cerrar ajustes">Cerrar</Button>

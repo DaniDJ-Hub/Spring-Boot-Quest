@@ -52,7 +52,7 @@ function AchievementToast({ item, dismiss }: { item: ToastItem; dismiss: (id: nu
         <Icon name={achievementIcon(achievement?.id ?? '')} size={20} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 font-mono text-micro uppercase tracking-wide text-fg-tertiary">
+        <p className="flex items-center gap-2 font-mono text-micro text-fg-tertiary">
           Logro <span className={r.text}>{r.label}</span>
         </p>
         <p className="font-display text-body text-fg">{item.title}</p>

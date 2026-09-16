@@ -96,7 +96,7 @@ function MasteryFeedback({ before, concepts }: { before: GameState; concepts: st
 
   return (
     <div className="border-t border-edge pt-3">
-      <p className="mb-2 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Dominio</p>
+      <p className="mb-2 text-caption text-fg-secondary">Dominio</p>
       <ul className="space-y-2">
         {changes.map(c => (
           <li key={c.concept} className="flex flex-wrap items-center gap-2">

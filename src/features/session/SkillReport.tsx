@@ -63,7 +63,7 @@ export function SkillReport({ onBack, onRetake, review }: {
         <div className="p-6">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Veredicto</p>
+              <p className="text-caption text-fg-secondary">Veredicto</p>
               <h1 className="font-display text-h1">{report.verdict}</h1>
               <p className="mt-1 font-mono text-caption text-fg-secondary tnum">
                 {report.score} de {report.total} · {new Date(report.at).toLocaleDateString('es-MX')}
@@ -88,7 +88,7 @@ export function SkillReport({ onBack, onRetake, review }: {
       </section>
 
       <section className="panel p-5">
-        <h2 className="mb-3 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Resultado por mundo</h2>
+        <h2 className="mb-3 text-caption text-fg-secondary">Resultado por mundo</h2>
         <ul className="space-y-2">
           {report.worlds.map(w => (
             <li key={w.world.id} className="flex flex-wrap items-center gap-3">
@@ -127,7 +127,7 @@ export function SkillReport({ onBack, onRetake, review }: {
                 {report.toReview.map(w => (
                   <li key={w.id}>
                     <Link to={{ name: 'mundo', worldId: w.id }} className="text-fg hover:text-accent">{worldCode(w)} {w.title}</Link>
-                    <span className="text-fg-tertiary"> · {w.courseRange}</span>
+                    <span className="text-fg-tertiary"> ({w.courseRange})</span>
                   </li>
                 ))}
               </ul>
@@ -136,10 +136,10 @@ export function SkillReport({ onBack, onRetake, review }: {
       </div>
 
       <section className="panel p-5">
-        <h2 className="mb-3 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Cobertura de conceptos</h2>
+        <h2 className="mb-3 text-caption text-fg-secondary">Cobertura de conceptos</h2>
         <p className="mb-3 text-body">
           <span className="font-display text-h3 text-accent tnum">{report.green.length}</span>
-          <span className="text-fg-secondary"> dominados · </span>
+          <span className="text-fg-secondary"> dominados y </span>
           <span className="font-display text-h3 text-fg-secondary tnum">{report.unpracticed.length}</span>
           <span className="text-fg-secondary"> sin practicar todavía</span>
         </p>
@@ -158,7 +158,7 @@ export function SkillReport({ onBack, onRetake, review }: {
       </section>
 
       <section className="panel p-5">
-        <h2 className="mb-3 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Qué sigue</h2>
+        <h2 className="mb-3 text-caption text-fg-secondary">Qué sigue</h2>
         <ul className="space-y-3 text-body leading-relaxed">
           {weak > 0 && (
             <li className="flex flex-wrap items-center gap-2">
@@ -185,7 +185,7 @@ export function SkillReport({ onBack, onRetake, review }: {
 
       {report.unpracticed.length > 0 && (
         <section className="panel p-5 print:hidden">
-          <h2 className="mb-3 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Conceptos sin practicar</h2>
+          <h2 className="mb-3 text-caption text-fg-secondary">Conceptos sin practicar</h2>
           <ul className="grid gap-2 sm:grid-cols-2">
             {report.unpracticed.slice(0, 10).map(k => (
               <li key={k} className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2">
@@ -199,7 +199,7 @@ export function SkillReport({ onBack, onRetake, review }: {
 
       {review && review.length > 0 && (
         <section className="panel p-5 print:hidden">
-          <h2 className="mb-1 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Revisión de este intento</h2>
+          <h2 className="mb-1 text-caption text-fg-secondary">Revisión de este intento</h2>
           <p className="mb-3 text-caption text-fg-secondary">
             Disponible ahora: el detalle de cada respuesta no se guarda con la partida.
           </p>

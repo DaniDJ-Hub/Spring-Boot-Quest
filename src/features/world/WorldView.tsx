@@ -67,7 +67,7 @@ export function WorldView({ worldId }: { worldId: string }) {
           <h1 className="text-h2">{world.title}</h1>
           <p className="mt-1 text-body text-fg-secondary">{world.tagline}</p>
 
-          <h2 className="mb-2 mt-6 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Dependencia no resuelta</h2>
+          <h2 className="mb-2 mt-6 text-caption text-fg-secondary">Dependencia no resuelta</h2>
           <ul className="space-y-2">
             {requirements.map(r => (
               <li key={r.world.id}>
@@ -98,7 +98,7 @@ export function WorldView({ worldId }: { worldId: string }) {
   if (mode === 'practice' || mode === 'single') {
     return (
       <PracticeRound
-        title={mode === 'single' ? 'Reto suelto' : `Práctica · ${world.title}`}
+        title={mode === 'single' ? 'Reto suelto' : `Práctica en ${world.title}`}
         subtitle={mode === 'single' ? world.title : 'Los retos vienen ordenados por el motor adaptativo'}
         selection={selection}
         reasons={reasons}
@@ -229,7 +229,7 @@ export function WorldView({ worldId }: { worldId: string }) {
 
           {/* Retos agrupados por motivo */}
           <section>
-            <h2 className="mb-3 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Retos del mundo</h2>
+            <h2 className="mb-3 text-caption text-fg-secondary">Retos del mundo</h2>
             <div className="space-y-5">
               {groups.map(g => (
                 <div key={g.reason}>
@@ -260,7 +260,7 @@ export function WorldView({ worldId }: { worldId: string }) {
         {/* Dominio por concepto */}
         <aside className="space-y-6 lg:sticky lg:top-6">
           <section className="panel p-4">
-            <h2 className="mb-1 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Dominio por concepto</h2>
+            <h2 className="mb-1 text-caption text-fg-secondary">Dominio por concepto</h2>
             <p className="mb-4 font-display text-h3 text-fg tnum">
               {mastery.green}<span className="text-body text-fg-tertiary"> / {mastery.total} en verde</span>
             </p>
@@ -270,7 +270,7 @@ export function WorldView({ worldId }: { worldId: string }) {
                 return (
                   <li key={k}>
                     <div className="flex items-center gap-2">
-                      <span className="min-w-0 flex-1 truncate text-caption text-fg">{CONCEPT_LABEL[k] ?? k}</span>
+                      <span className="min-w-0 flex-1 truncate text-caption text-fg" title={CONCEPT_LABEL[k] ?? k}>{CONCEPT_LABEL[k] ?? k}</span>
                       <span className="font-mono text-micro text-fg-tertiary tnum">
                         {p.attempts ? `${p.correct}/${p.attempts}` : '—'}
                       </span>
@@ -297,7 +297,7 @@ export function WorldView({ worldId }: { worldId: string }) {
             <section className="panel p-4 text-caption">
               {dependents.length > 0 && (
                 <p className="text-fg-secondary">
-                  <span className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Desbloquea</span><br />
+                  <span className="text-caption text-fg-secondary">Desbloquea</span><br />
                   {dependents.map(d => (
                     <Link key={d.id} to={{ name: 'mundo', worldId: d.id }} className="mr-3 inline-block hover:text-accent">
                       {worldCode(d)} {d.title}
@@ -307,9 +307,9 @@ export function WorldView({ worldId }: { worldId: string }) {
               )}
               {project && (
                 <p className={cx('text-fg-secondary', dependents.length > 0 && 'mt-3 border-t border-edge pt-3')}>
-                  <span className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Proyecto asociado</span><br />
+                  <span className="text-caption text-fg-secondary">Proyecto asociado</span><br />
                   <Link to={{ name: 'proyectos' }} className="hover:text-accent">{project.title}</Link>
-                  {!gate.cleared && <span className="text-fg-tertiary"> · se abre al superar la boss</span>}
+                  {!gate.cleared && <span className="text-fg-tertiary">, se abre al superar la boss</span>}
                 </p>
               )}
             </section>

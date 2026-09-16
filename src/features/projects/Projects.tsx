@@ -100,7 +100,7 @@ function ProjectDetail({ project: p }: { project: ProjectBrief }) {
 
         {st.status === 'locked' ? (
           <div className="mt-5 rounded-md border border-dashed border-edge-strong p-4">
-            <h3 className="mb-2 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Lo que pedirá</h3>
+            <h3 className="mb-2 text-caption text-fg-secondary">Lo que pedirá</h3>
             <ul className="space-y-1 text-caption leading-relaxed text-fg-secondary">
               {p.requirements.slice(0, 3).map(r => <li key={r}>· {r}</li>)}
               <li className="text-fg-tertiary">…y {p.requirements.length - 3 + p.acceptance.length} puntos más al abrirlo.</li>
@@ -131,7 +131,7 @@ function ProjectDetail({ project: p }: { project: ProjectBrief }) {
 
             {p.stretch && (
               <div className="mt-6 border-t border-edge pt-4">
-                <h3 className="mb-2 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Si quieres ir más lejos</h3>
+                <h3 className="mb-2 text-caption text-fg-secondary">Si quieres ir más lejos</h3>
                 <ul className="space-y-1 text-caption leading-relaxed text-fg-secondary">
                   {p.stretch.map(s => <li key={s}>· {s}</li>)}
                 </ul>
@@ -153,7 +153,7 @@ function CheckList({ title, icon, items, marked, onToggle }: {
 }) {
   return (
     <section>
-      <h3 className="mb-2 flex items-center gap-2 font-mono text-micro uppercase tracking-wide text-fg-tertiary">
+      <h3 className="mb-2 flex items-center gap-2 text-caption text-fg-secondary">
         <Icon name={icon} size={14} />
         {title}
       </h3>

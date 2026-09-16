@@ -68,7 +68,7 @@ export const Console = forwardRef<HTMLDivElement, {
             <span className="text-body font-semibold text-fg">{correct ? 'Correcto' : 'Incorrecto'}</span>
             {xp !== undefined && (
               <span className="ml-auto font-mono text-caption text-fg-secondary tnum">
-                +{xp} XP{correct && usedHint ? ' · con pista' : ''}
+                +{xp} XP{correct && usedHint ? ' con pista' : ''}
               </span>
             )}
           </m.div>
@@ -81,19 +81,19 @@ export const Console = forwardRef<HTMLDivElement, {
 
           {consequence?.picked && (
             <div className="rounded-md border border-edge bg-surface-sunken p-3">
-              <p className="mb-1 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Consecuencia de tu decisión</p>
+              <p className="mb-1 text-caption text-fg-secondary">Consecuencia de tu decisión</p>
               <p className="text-body leading-relaxed text-fg">{consequence.picked}</p>
             </div>
           )}
           {!correct && consequence?.correct && (
             <div className="rounded-md border border-accent/40 bg-surface-sunken p-3">
-              <p className="mb-1 font-mono text-micro uppercase tracking-wide text-accent">Con la decisión recomendada</p>
+              <p className="mb-1 text-caption text-accent">Con la decisión recomendada</p>
               <p className="text-body leading-relaxed text-fg">{consequence.correct}</p>
             </div>
           )}
 
           <div>
-            <p className="mb-1 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Explicación</p>
+            <p className="mb-1 text-caption text-fg-secondary">Explicación</p>
             <p className="text-body leading-relaxed text-fg">{c.explain}</p>
           </div>
           {!correct && c.deeper && (

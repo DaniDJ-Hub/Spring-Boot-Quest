@@ -115,7 +115,7 @@ export function LevelBadge({ xp, size = 'md', className }: { xp: number; size?: 
         </span>
       </div>
       <div className="min-w-0">
-        <p className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">LV {level}</p>
+        <p className="font-mono text-micro text-fg-tertiary">LV {level}</p>
         <p className={cx('truncate font-display text-fg', size === 'lg' ? 'text-h2' : 'text-body')}>{titleFor(level)}</p>
         {size === 'lg' && next && (
           <p className="text-caption text-fg-secondary">Siguiente título: {next.name} en el nivel {next.level}</p>

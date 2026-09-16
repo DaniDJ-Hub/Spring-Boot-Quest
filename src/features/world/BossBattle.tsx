@@ -82,7 +82,7 @@ export function BossBattle({ world, onExit, onPractice }: { world: World; onExit
             <ul className="mt-6 space-y-3">
               <Rule icon="layers">
                 {gate.size} etapas con el reto más difícil de cada tipo que cabe:{' '}
-                {kinds.map(k => KIND_META[k].label).join(' · ')}.
+                {kinds.map(k => KIND_META[k].label).join(', ')}.
                 {missingKinds.length > 0 && (
                   <>
                     {' '}El mundo tiene {worldKinds.length} tipos y la boss son {gate.size} etapas, así que
@@ -128,7 +128,7 @@ export function BossBattle({ world, onExit, onPractice }: { world: World; onExit
     return (
       <RoundShell
         title={world.boss.title}
-        subtitle={`Deploy en curso · ${world.title}`}
+        subtitle={`Deploy en curso en ${world.title}`}
         tone="boss"
         onExit={onExit}
         exitLabel="Cancelar deploy"
@@ -198,7 +198,7 @@ export function BossBattle({ world, onExit, onPractice }: { world: World; onExit
       </section>
 
       <section className="panel p-4">
-        <h2 className="mb-3 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Etapas</h2>
+        <h2 className="mb-3 text-caption text-fg-secondary">Etapas</h2>
         <Pipeline
           stages={stages}
           label="Resultado por etapa"

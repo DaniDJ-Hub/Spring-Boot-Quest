@@ -42,7 +42,9 @@ export function CodeBlock({ code, lang = 'java', label, marks, renderLine, class
         <span className="truncate font-mono text-micro text-fg-secondary">{label ?? lang}</span>
         {label && <span className="ml-auto font-mono text-micro uppercase text-fg-tertiary">{lang}</span>}
       </figcaption>
-      <pre className="overflow-x-auto py-3 font-mono text-code">
+      {/* translate="no": el traductor del navegador no debe tocar el código;
+          traducir «String» o una anotación rompería el reto. */}
+      <pre translate="no" className="overflow-x-auto py-3 font-mono text-code">
         {lines.map((l, i) => {
           const mark = marks?.[i] ? MARK[marks[i]] : null
           const custom = renderLine?.(l, i)

@@ -80,7 +80,8 @@ export function Dialog({ open, onClose, labelledBy, describedBy, initialFocus, c
             aria-describedby={describedBy}
             data-mode={mode}
             className={cx(
-              'float max-h-[90vh] w-full overflow-y-auto rounded-b-none p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:rounded-b-lg sm:pb-6',
+              // overscroll-contain: al llegar al final del diálogo, el scroll no se escapa a la página.
+              'float max-h-[90vh] w-full overflow-y-auto overscroll-contain rounded-b-none p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:rounded-b-lg sm:pb-6',
               size === 'sm' ? 'sm:max-w-sm' : size === 'lg' ? 'sm:max-w-2xl' : 'sm:max-w-md',
               className,
             )}

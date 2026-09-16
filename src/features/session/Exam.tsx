@@ -75,7 +75,7 @@ export function Exam() {
           <div className="mt-5 flex flex-wrap gap-3">
             {next && (
               <Link to={{ name: 'mundo', worldId: next.world.id }} className="text-body text-fg-secondary hover:text-accent">
-                Siguiente: {worldCode(next.world)} {next.world.title} →
+                Sigue por {worldCode(next.world)} {next.world.title}
               </Link>
             )}
             <Button variant="secondary" onClick={() => navigate({ name: 'mapa' })}>Ver el mapa</Button>
@@ -137,7 +137,7 @@ export function Exam() {
   return (
     <RoundShell
       title="Examen en curso"
-      subtitle={`${cursor + 1} de ${queue.length || selection.length} · sin pistas`}
+      subtitle={`${cursor + 1} de ${queue.length || selection.length}, sin pistas`}
       onExit={() => setPhase('intro')}
       exitLabel="Salir del examen"
       confirmExit={{

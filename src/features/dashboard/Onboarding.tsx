@@ -16,7 +16,7 @@ const KINDS = Object.entries(KIND_META) as [keyof typeof KIND_META, { label: str
 export function Onboarding() {
   return (
     <div className="mx-auto max-w-4xl">
-      <p className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Primera vez por aquí</p>
+      <p className="text-caption text-fg-secondary">Primera vez por aquí</p>
       <h1 className="mt-2 text-h1">
         Spring Boot se aprende<br />resolviendo, no leyendo
       </h1>

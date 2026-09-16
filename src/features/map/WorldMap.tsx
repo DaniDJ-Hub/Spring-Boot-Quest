@@ -166,7 +166,7 @@ function WorldDetail({ world }: { world: World }) {
 
       <dl className="mt-4 space-y-3 text-caption">
         <div>
-          <dt className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Requiere</dt>
+          <dt className="text-caption text-fg-secondary">Requiere</dt>
           <dd className="mt-1 flex flex-wrap gap-2">
             {reqs.length === 0 && <span className="text-fg-secondary">Nada: es el punto de partida.</span>}
             {reqs.map(r => (
@@ -178,7 +178,7 @@ function WorldDetail({ world }: { world: World }) {
           </dd>
         </div>
         <div>
-          <dt className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Desbloquea</dt>
+          <dt className="text-caption text-fg-secondary">Desbloquea</dt>
           <dd className="mt-1 flex flex-wrap gap-2">
             {deps.length === 0 && <span className="text-fg-secondary">Nada: es el final de su rama.</span>}
             {deps.map(d => (
@@ -189,11 +189,11 @@ function WorldDetail({ world }: { world: World }) {
           </dd>
         </div>
         <div>
-          <dt className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Boss battle</dt>
+          <dt className="text-caption text-fg-secondary">Boss battle</dt>
           <dd className="mt-1 text-fg-secondary">
             <span className={gate.open || gate.cleared ? 'text-boss' : ''}>{world.boss.title}</span> ·{' '}
-            {gate.size} retos · umbral {Math.round(gate.passRate * 100)} %
-            {!gate.open && !gate.cleared && <> · se abre con {gate.required} resueltos</>}
+            {gate.size} retos, umbral {Math.round(gate.passRate * 100)} %
+            {!gate.open && !gate.cleared && <>, se abre con {gate.required} resueltos</>}
           </dd>
         </div>
       </dl>

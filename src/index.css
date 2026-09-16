@@ -8,7 +8,21 @@
   html {
     -webkit-text-size-adjust: 100%;
     color-scheme: dark;
+    /* Al tabular, el elemento enfocado no puede quedar debajo de la cabecera
+     * pegajosa ni de la barra de acción del reto (WCAG 2.2: focus not obscured). */
+    scroll-padding-top: 4rem;
+    scroll-padding-bottom: 7rem;
   }
+
+  /* Sin retardo de 300 ms al tocar y sin destello azul en Android. El asa de
+   * arrastre lo sobrescribe con su propia utilidad, porque ahí sí hace falta. */
+  button, a, summary, [role="button"], [role="radio"], [role="checkbox"], [role="switch"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Titulares sin palabras huérfanas en la última línea. */
+  h1, h2, h3 { text-wrap: balance; }
   /* Fondo liso: la jerarquía la dan superficie y borde, no un degradado. */
   body { @apply bg-surface text-fg font-sans antialiased; }
 

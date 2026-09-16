@@ -173,7 +173,7 @@ export function RoundSummary({ title, before, answered, results, actions }: {
 
       {newAchievements.length > 0 && (
         <section className="panel p-4">
-          <h2 className="mb-3 font-mono text-micro uppercase tracking-wide text-fg-tertiary">Logros nuevos</h2>
+          <h2 className="mb-3 text-caption text-fg-secondary">Logros nuevos</h2>
           <ul className="space-y-2">
             {newAchievements.map(id => {
               const a = ACHIEVEMENTS.find(x => x.id === id)
@@ -211,7 +211,7 @@ function ChangeList({ title, icon, tone, changes, empty }: {
 }) {
   return (
     <div className="panel p-4">
-      <h2 className={cx('mb-3 flex items-center gap-2 font-mono text-micro uppercase tracking-wide', tone === 'accent' ? 'text-accent' : 'text-fg-secondary')}>
+      <h2 className={cx('mb-3 flex items-center gap-2 text-caption', tone === 'accent' ? 'text-accent' : 'text-fg-secondary')}>
         <Icon name={icon} size={14} />
         {title}
       </h2>
@@ -221,7 +221,9 @@ function ChangeList({ title, icon, tone, changes, empty }: {
         <ul className="space-y-2">
           {changes.map(c => (
             <li key={c.concept} className="flex flex-wrap items-center gap-2">
-              <span className="min-w-0 flex-1 truncate text-caption text-fg">{CONCEPT_LABEL[c.concept] ?? c.concept}</span>
+              <span className="min-w-0 flex-1 truncate text-caption text-fg" title={CONCEPT_LABEL[c.concept] ?? c.concept}>
+                {CONCEPT_LABEL[c.concept] ?? c.concept}
+              </span>
               <MasteryMeter level={c.to} previous={c.direction === 'down' ? c.from : undefined} size="sm" showLabel />
             </li>
           ))}

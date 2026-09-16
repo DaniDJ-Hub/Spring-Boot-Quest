@@ -16,7 +16,7 @@ import { Counter } from '../../components/Counter'
 function Module({ title, icon, children, action }: { title: string; icon: IconName; children: ReactNode; action?: ReactNode }) {
   return (
     <section className="panel flex flex-col p-4">
-      <h2 className="mb-3 flex items-center gap-2 font-mono text-micro uppercase tracking-wide text-fg-tertiary">
+      <h2 className="mb-3 flex items-center gap-2 text-caption text-fg-secondary">
         <Icon name={icon} size={14} />
         {title}
       </h2>
@@ -52,7 +52,6 @@ export function Dashboard() {
       <section>
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Siguiente acción</p>
             <h1 className="font-display text-h2">
               {focusGate.open ? 'Tienes un deploy listo' : last ? 'Continúa donde lo dejaste' : 'Sigue por aquí'}
             </h1>
@@ -68,13 +67,13 @@ export function Dashboard() {
 
           <div className="panel flex flex-col justify-between gap-4 p-4">
             <div>
-              <p className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Nivel {lp.level}</p>
+              <p className="text-caption text-fg-secondary">Nivel {lp.level}</p>
               <p className="font-display text-h3 text-accent">{titleFor(lp.level)}</p>
               <div className="mt-3">
                 <Bar pct={lp.pct} label={`Progreso hacia el nivel ${lp.level + 1}`} />
                 <p className="mt-2 flex justify-between gap-2 font-mono text-micro text-fg-tertiary tnum">
                   <span>{lp.floor} XP</span>
-                  <span className="truncate">{nt ? `${nt.name} · nivel ${nt.level}` : 'Todos los títulos'}</span>
+                  <span className="truncate">{nt ? `${nt.name} en el nivel ${nt.level}` : 'Todos los títulos'}</span>
                   <span>{lp.ceil} XP</span>
                 </p>
               </div>
@@ -157,7 +156,7 @@ export function Dashboard() {
                 </Button>
               : nextBoss && (
                   <Link to={{ name: 'mundo', worldId: nextBoss.world.id }} className="text-caption text-fg-secondary hover:text-accent">
-                    Próxima boss: {nextBoss.world.title} →
+                    Tu próxima boss es {nextBoss.world.title}
                   </Link>
                 )
           }
@@ -177,7 +176,7 @@ export function Dashboard() {
 
       {/* Los quince mundos de un vistazo */}
       <section>
-        <h2 className="mb-3 flex items-center gap-2 font-mono text-micro uppercase tracking-wide text-fg-tertiary">
+        <h2 className="mb-3 flex items-center gap-2 text-caption text-fg-secondary">
           <Icon name="graph" size={14} />
           Los quince mundos
         </h2>
@@ -215,7 +214,7 @@ export function Dashboard() {
 
       {/* Actividad */}
       <section>
-        <h2 className="mb-3 flex items-center gap-2 font-mono text-micro uppercase tracking-wide text-fg-tertiary">
+        <h2 className="mb-3 flex items-center gap-2 text-caption text-fg-secondary">
           <Icon name="terminal" size={14} />
           Actividad reciente
         </h2>

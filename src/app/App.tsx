@@ -77,7 +77,7 @@ export default function App() {
             <p className="font-display text-lead leading-tight">
               Spring Boot<br /><span className="text-accent">Quest</span>
             </p>
-            <p className="mt-1 font-mono text-micro leading-snug text-fg-tertiary">15 mundos · 114 retos</p>
+            <p className="mt-1 font-mono text-micro leading-snug text-fg-tertiary">15 mundos, 114 retos</p>
           </Link>
 
           <nav aria-label="Navegación principal" className="flex-1 space-y-1">
@@ -164,7 +164,10 @@ export default function App() {
 
         {/* Barra inferior en móvil; se recoge mientras se responde una ronda */}
         {!immersive && (
-          <nav aria-label="Navegación inferior" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-edge bg-surface/95 backdrop-blur md:hidden">
+          <nav
+            aria-label="Navegación inferior"
+            className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+          >
             {TABS.map(t => (
               <Link
                 key={t.label}

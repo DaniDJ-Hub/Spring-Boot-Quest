@@ -178,7 +178,7 @@ function RunnerBody({
           {c.kind === 'codefix' && o.code && choice.code && <PatchView original={choice.code} patch={o.code} />}
           {c.kind === 'decision' && st.revealed && o.consequence && (
             <span className={cx('mt-2 block text-caption leading-relaxed', st.isAnswer ? 'text-accent' : 'text-fg-secondary')}>
-              → {o.consequence}
+              <span className="text-fg-tertiary">Si eliges esto: </span>{o.consequence}
             </span>
           )}
         </>
@@ -228,7 +228,6 @@ function RunnerBody({
             )}
           </div>
           <h2 ref={heading} id={promptId} tabIndex={-1} className="font-sans text-lead font-normal leading-relaxed text-fg outline-none">
-            {c.kind === 'decision' && <span className="mb-1 block font-mono text-micro uppercase tracking-wide text-fg-tertiary">Situación</span>}
             {c.prompt}
           </h2>
           <p className="mt-3 flex items-center gap-3 font-mono text-micro text-fg-tertiary">
@@ -264,7 +263,7 @@ function RunnerBody({
           {codePane && <div className={cx(pane('codigo'), 'mb-4')}>{codePane}</div>}
           <div className={pane('reto')}>
             {INTERACTION_TITLE[c.kind] && (
-              <h3 className="mb-2 font-mono text-micro uppercase tracking-wide text-fg-tertiary">{INTERACTION_TITLE[c.kind]}</h3>
+              <h3 className="mb-2 text-caption text-fg-secondary">{INTERACTION_TITLE[c.kind]}</h3>
             )}
             {interaction}
           </div>
@@ -284,7 +283,8 @@ function RunnerBody({
             extra={feedbackExtra}
             shortcut={
               <span className="text-caption text-fg-tertiary">
-                Atajos: <span className="kbd">1</span>…<span className="kbd">4</span> elegir · <span className="kbd">Ctrl</span>+<span className="kbd">Enter</span> comprobar
+                Pulsa <span className="kbd">1</span>…<span className="kbd">4</span> para elegir y{' '}
+                <span className="kbd">Ctrl</span>+<span className="kbd">Enter</span> para comprobar.
               </span>
             }
           />
@@ -292,7 +292,7 @@ function RunnerBody({
 
         {/* Acciones: barra fija en móvil, junto a la consola en escritorio */}
         {!review && (
-          <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center gap-3 border-t border-edge bg-surface/95 px-4 py-3 backdrop-blur lg:static lg:col-start-2 lg:row-start-3 lg:mx-0 lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none xl:col-start-3 xl:row-start-2">
+          <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center gap-3 border-t border-edge bg-surface/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur lg:static lg:col-start-2 lg:row-start-3 lg:mx-0 lg:border-0 lg:bg-transparent lg:p-0 lg:pb-0 lg:backdrop-blur-none xl:col-start-3 xl:row-start-2">
             {!done
               ? <Button onClick={submit} disabled={!ready}>Comprobar</Button>
               : <Button onClick={onNext} iconRight="arrow-right">{nextLabel}</Button>}
