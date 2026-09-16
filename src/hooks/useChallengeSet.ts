@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Challenge, ChallengeMeta } from '../types'
-import { loadWorlds } from '../data'
+import { isLoaded, loadWorlds, peek } from '../data'
 
 type Status = 'loading' | 'ready' | 'error'
 
@@ -11,52 +11,56 @@ export interface ChallengeSet {
   retry: () => void
 }
 
+const keyOf = (metas: ChallengeMeta[] | null) => (metas ? metas.map(m => m.id).join('|') : '')
+
+/** Resuelve la selección sin descargar nada, si los mundos ya están en caché. */
+function resolveCached(metas: ChallengeMeta[] | null): Challenge[] | null {
+  // Sin selección no hay nada que esperar: listo y vacío.
+  if (!metas || metas.length === 0) return []
+  const worlds = [...new Set(metas.map(m => m.worldId))]
+  if (!worlds.every(isLoaded)) return null
+  const byId = new Map(worlds.flatMap(id => peek(id) ?? []).map(c => [c.id, c]))
+  return metas.map(m => byId.get(m.id)).filter((c): c is Challenge => Boolean(c))
+}
+
 /**
- * Toma una selección hecha sobre metadatos y descarga el contenido completo de
- * los mundos implicados, conservando el orden que decidió el motor adaptativo.
- * La caché del loader hace que volver a entrar a un mundo ya visitado sea
- * instantáneo y no dispare otra petición.
+ * Toma una selección hecha sobre metadatos y entrega el contenido completo,
+ * conservando el orden que decidió el motor.
+ *
+ * Todo lo que devuelve va atado a la selección actual: si la selección cambia,
+ * el estado vuelve a «cargando» en el mismo render, sin un fotograma con los
+ * retos de la ronda anterior. Y si los mundos ya están en caché, se resuelve
+ * de forma síncrona: volver a entrar no parpadea con el esqueleto.
  */
 export function useChallengeSet(metas: ChallengeMeta[] | null): ChallengeSet {
-  const [status, setStatus] = useState<Status>(metas === null || metas.length === 0 ? 'ready' : 'loading')
-  const [challenges, setChallenges] = useState<Challenge[]>([])
-  const [error, setError] = useState<Error | null>(null)
+  const key = keyOf(metas)
   const [attempt, setAttempt] = useState(0)
+  const [loaded, setLoaded] = useState<{ key: string; challenges: Challenge[] } | null>(null)
+  const [failed, setFailed] = useState<{ key: string; error: Error } | null>(null)
 
-  // Las claves de los mundos, en una cadena estable: evita recargar por una
-  // nueva referencia de array que contiene exactamente lo mismo.
-  const key = metas ? metas.map(m => m.id).join('|') : ''
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` resume la selección
+  const cached = useMemo(() => resolveCached(metas), [key])
 
   useEffect(() => {
-    if (!metas || metas.length === 0) {
-      setChallenges([])
-      setStatus('ready')
-      return
-    }
+    if (!metas || cached) return
     let cancelled = false
-    setStatus('loading')
-    setError(null)
-
     loadWorlds(metas.map(m => m.worldId))
       .then(all => {
         if (cancelled) return
         const byId = new Map(all.map(c => [c.id, c]))
-        const ordered = metas
-          .map(m => byId.get(m.id))
-          .filter((c): c is Challenge => Boolean(c))
-        setChallenges(ordered)
-        setStatus('ready')
+        setLoaded({ key, challenges: metas.map(m => byId.get(m.id)).filter((c): c is Challenge => Boolean(c)) })
       })
       .catch((e: unknown) => {
         if (cancelled) return
-        setError(e instanceof Error ? e : new Error('No se pudo cargar el contenido'))
-        setStatus('error')
+        setFailed({ key, error: e instanceof Error ? e : new Error('No se pudo cargar el contenido') })
       })
-
     return () => { cancelled = true }
     // `key` resume la selección; `attempt` fuerza el reintento manual.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, attempt])
+  }, [key, attempt, cached])
 
-  return { status, challenges, error, retry: () => setAttempt(a => a + 1) }
+  if (cached) return { status: 'ready', challenges: cached, error: null, retry: () => setAttempt(a => a + 1) }
+  if (failed?.key === key) return { status: 'error', challenges: [], error: failed.error, retry: () => setAttempt(a => a + 1) }
+  if (loaded?.key === key) return { status: 'ready', challenges: loaded.challenges, error: null, retry: () => setAttempt(a => a + 1) }
+  return { status: 'loading', challenges: [], error: null, retry: () => setAttempt(a => a + 1) }
 }

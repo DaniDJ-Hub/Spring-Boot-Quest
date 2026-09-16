@@ -13,7 +13,11 @@ export default defineConfig({
          */
         manualChunks(id) {
           if (!id.includes('node_modules')) return
-          if (id.includes('motion') || id.includes('framer')) return 'vendor-motion'
+          // Motion se deja al reparto automático a propósito: agruparlo entero
+          // metía la proyección de layout (domMax) en un chunk que la entrada
+          // carga siempre, y esa parte solo hace falta en el mapa y al
+          // reordenar un flujo. Sin agrupar, queda en su propio chunk diferido.
+          if (id.includes('motion') || id.includes('framer')) return
           if (id.includes('react')) return 'vendor-react'
         },
       },

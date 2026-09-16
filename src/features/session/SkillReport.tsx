@@ -2,13 +2,21 @@ import { useState } from 'react'
 import type { Challenge } from '../../types'
 import { CONCEPT_LABEL } from '../../data/worlds'
 import { useGameState } from '../../engine/game-context'
-import { conceptProgress, skillReport, weakCount } from '../../engine/selectors'
+import { conceptProgress, skillReport, SKILL_REPORT_RULES, weakCount } from '../../engine/selectors'
 import type { WorldBand } from '../../engine/selectors'
 import { useRouter } from '../../app/router-context'
 import { Link } from '../../app/router'
 import { ChallengeRunner } from '../challenge/ChallengeRunner'
 import type { Answer } from '../challenge/evaluate'
 import { Badge, Bar, Button, cx, EmptyState, Icon, MasteryMeter, worldCode } from '../../components/ui'
+
+/** El tono de la barra general sale de los mismos cortes que el veredicto. */
+function overallTone(ratio: number): 'accent' | 'warning' | 'danger' {
+  const [, bueno, aceptable] = SKILL_REPORT_RULES.verdicts
+  if (ratio >= bueno.min) return 'accent'
+  if (ratio >= aceptable.min) return 'warning'
+  return 'danger'
+}
 
 const BAND: Record<WorldBand, { tone: 'accent' | 'warning' | 'danger'; label: string }> = {
   strong: { tone: 'accent', label: 'Aprobado sin comentarios' },
@@ -66,7 +74,7 @@ export function SkillReport({ onBack, onRetake, review }: {
           <div className="mt-4">
             <Bar
               pct={pct}
-              tone={report.ratio >= 0.75 ? 'accent' : report.ratio >= 0.55 ? 'warning' : 'danger'}
+              tone={overallTone(report.ratio)}
               label="Puntuación del examen final"
               height="h-2"
             />

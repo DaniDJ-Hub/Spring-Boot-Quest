@@ -72,7 +72,7 @@ export default function App() {
         </a>
 
         {/* Rail lateral en escritorio */}
-        <aside aria-label="Navegación principal" className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-edge px-4 py-6 md:flex">
+        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-edge px-4 py-6 md:flex">
           <Link to={{ name: 'panel' }} className="mb-8 block">
             <p className="font-display text-lead leading-tight">
               Spring Boot<br /><span className="text-accent">Quest</span>
@@ -80,7 +80,7 @@ export default function App() {
             <p className="mt-1 font-mono text-micro leading-snug text-fg-tertiary">15 mundos · 114 retos</p>
           </Link>
 
-          <nav className="flex-1 space-y-1">
+          <nav aria-label="Navegación principal" className="flex-1 space-y-1">
             {TABS.map(t => (
               <Link
                 key={t.label}
@@ -164,7 +164,7 @@ export default function App() {
 
         {/* Barra inferior en móvil; se recoge mientras se responde una ronda */}
         {!immersive && (
-          <nav aria-label="Navegación principal" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-edge bg-surface/95 backdrop-blur md:hidden">
+          <nav aria-label="Navegación inferior" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-edge bg-surface/95 backdrop-blur md:hidden">
             {TABS.map(t => (
               <Link
                 key={t.label}
