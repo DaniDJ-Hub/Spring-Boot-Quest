@@ -1,165 +1,247 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react'
-import { WORLDS } from '../../data/worlds'
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { WORLDS, WORLD_BY_ID } from '../../data/worlds'
+import type { World } from '../../types'
 import { useGameState } from '../../engine/game-context'
-import { bossAvailable, worldProgress, worldUnlocked } from '../../engine/core'
-import { m } from 'motion/react'
+import { bossGate, worldDependents, worldMastery, worldRequirements, worldStatus } from '../../engine/selectors'
 import { Link } from '../../app/router'
-import { listItem, staggered } from '../../animations'
-import { Bar, Chip } from '../../components/ui'
+import {
+  Badge, Bar, buttonClass, cx, DependencyEdge, GraphNode, Icon, WORLD_STATUS_META, worldCode,
+} from '../../components/ui'
+import { layout } from './layout'
 
-/** Los tokens de Tailwind no llegan a los atributos de SVG, así que se declaran
- *  aquí con los mismos valores para que no se desincronicen en silencio. */
-const STROKE = {
-  done: '#3D6B27',
-  idle: '#333D61',
-  clearedFill: '#5FA83C',
-  clearedRing: '#7BC653',
-  openFill: '#1E2540',
-  openRing: '#6BA3E8',
-  lockedFill: '#151A2D',
-}
+interface Port { x: number; top: number; bottom: number }
 
-interface Point { x: number; y: number }
-
+/**
+ * Mapa: el grafo real de dependencias entre los quince mundos.
+ *
+ * Las capas se calculan desde `requires` (layout.ts) y las posiciones se miden
+ * del DOM, así que el árbol cuadra aunque cambie el ancho o el tamaño de letra.
+ * En móvil no hay lienzo: cada mundo se lee como una ficha con sus requisitos
+ * y lo que desbloquea.
+ */
 export function WorldMap() {
   const { state } = useGameState()
-  const container = useRef<HTMLDivElement>(null)
-  const rows = useRef<(HTMLLIElement | null)[]>([])
-  const [points, setPoints] = useState<Point[]>([])
+  const rows = useMemo(() => layout(WORLDS), [])
+  const canvas = useRef<HTMLDivElement>(null)
+  const nodes = useRef<Record<string, HTMLDivElement | null>>({})
+  const [ports, setPorts] = useState<Record<string, Port>>({})
   const [height, setHeight] = useState(0)
-  const [step, setStep] = useState(22)
+  const [selectedId, setSelectedId] = useState<string>(() => WORLDS[0].id)
 
-  /**
-   * Las posiciones de los nodos se miden del DOM en vez de calcularse con una
-   * altura de fila fija. Así el árbol sigue cuadrando aunque el texto envuelva
-   * en dos líneas o el usuario suba el tamaño de letra del sistema.
-   */
   const measure = useCallback(() => {
-    const box = container.current
+    const box = canvas.current
     if (!box) return
     const base = box.getBoundingClientRect()
-    const narrow = box.clientWidth < 520
-    const s = narrow ? 11 : 22
-    setStep(s)
-    setPoints(
-      WORLDS.map((w, i) => {
-        const el = rows.current[i]
-        if (!el) return { x: 0, y: 0 }
-        const r = el.getBoundingClientRect()
-        return { x: 14 + w.depth * s, y: r.top - base.top + r.height / 2 }
-      }),
-    )
+    const next: Record<string, Port> = {}
+    for (const [id, el] of Object.entries(nodes.current)) {
+      if (!el) continue
+      const r = el.getBoundingClientRect()
+      next[id] = { x: r.left - base.left + r.width / 2, top: r.top - base.top, bottom: r.bottom - base.top }
+    }
+    setPorts(next)
     setHeight(box.scrollHeight)
   }, [])
 
   useLayoutEffect(() => {
     measure()
-    const box = container.current
+    const box = canvas.current
     if (!box || typeof ResizeObserver === 'undefined') return
     const ro = new ResizeObserver(measure)
     ro.observe(box)
-    for (const el of rows.current) if (el) ro.observe(el)
+    for (const el of Object.values(nodes.current)) if (el) ro.observe(el)
     return () => ro.disconnect()
   }, [measure])
 
-  const gutter = 14 + step * 5 + (step === 11 ? 16 : 26)
+  const selected = WORLD_BY_ID[selectedId] ?? WORLDS[0]
+  const ready = Object.keys(ports).length === WORLDS.length
 
   return (
-    <section>
-      <header className="mb-5">
-        <h1 className="text-h3 mb-1">Árbol de dependencias</h1>
-        <p className="text-body text-fg-secondary max-w-2xl">
-          Cada mundo se apoya en los anteriores, igual que en el curso. Un mundo se abre cuando superas
-          la boss battle de todos los que cuelgan encima de él.
+    <div className="mx-auto max-w-6xl">
+      <header className="mb-6">
+        <h1 className="text-h2">Árbol de dependencias</h1>
+        <p className="mt-1 max-w-2xl text-body text-fg-secondary">
+          Cada mundo se apoya en los anteriores. Superar una boss battle resuelve esa dependencia y abre
+          los mundos que cuelgan de ella.
         </p>
       </header>
 
-      <div ref={container} className="relative">
-        {points.length === WORLDS.length && (
-          <svg className="absolute inset-0 pointer-events-none" width="100%" height={height} aria-hidden="true">
-            {WORLDS.map((w, i) =>
-              w.requires.map(req => {
-                const j = WORLDS.findIndex(x => x.id === req)
-                if (j < 0) return null
-                const a = points[j]
-                const b = points[i]
-                const done = state.bossCleared.includes(req)
-                return (
-                  <path
-                    key={`${w.id}-${req}`}
-                    d={`M ${a.x} ${a.y + 12} L ${a.x} ${b.y - 14} Q ${a.x} ${b.y} ${a.x + 14} ${b.y} L ${b.x - 7} ${b.y}`}
-                    fill="none"
-                    stroke={done ? STROKE.done : STROKE.idle}
-                    strokeWidth={1.5}
-                  />
-                )
-              }),
-            )}
-            {WORLDS.map((w, i) => {
-              const cleared = state.bossCleared.includes(w.id)
-              const open = worldUnlocked(state, w)
-              return (
-                <circle
-                  key={w.id}
-                  cx={points[i].x} cy={points[i].y} r={cleared ? 6 : 5}
-                  fill={cleared ? STROKE.clearedFill : open ? STROKE.openFill : STROKE.lockedFill}
-                  stroke={cleared ? STROKE.clearedRing : open ? STROKE.openRing : STROKE.idle}
-                  strokeWidth={2}
-                />
-              )
-            })}
-          </svg>
-        )}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6">
+        {/* Lienzo del grafo: desde tablet hacia arriba */}
+        <div ref={canvas} className="relative hidden md:block">
+          {ready && (
+            <svg className="pointer-events-none absolute inset-0" width="100%" height={height} aria-hidden="true">
+              {WORLDS.flatMap(w =>
+                w.requires.map(req => {
+                  const from = ports[req]
+                  const to = ports[w.id]
+                  if (!from || !to) return null
+                  return (
+                    <DependencyEdge
+                      key={`${w.id}-${req}`}
+                      from={{ x: from.x, y: from.bottom }}
+                      to={{ x: to.x, y: to.top }}
+                      midY={(from.bottom + to.top) / 2}
+                      active={state.bossCleared.includes(req)}
+                    />
+                  )
+                }),
+              )}
+            </svg>
+          )}
 
-        {/* Escalonado solo aquí: en el mapa el orden de aparición refuerza que
-            cada mundo se apoya en el anterior. Aplicarlo a todas las secciones
-            de todas las pantallas es el tic más reconocible de una interfaz
-            generada, así que no se hace en ningún otro sitio. */}
-        <m.ol variants={staggered} initial="hidden" animate="show" className="relative space-y-3">
-          {WORLDS.map((w, i) => {
-            const open = worldUnlocked(state, w)
-            const cleared = state.bossCleared.includes(w.id)
-            const p = worldProgress(state, w.id)
-            const bossReady = bossAvailable(state, w) && !cleared
-            const etiqueta = `Mundo ${w.index}: ${w.title}. ${cleared ? 'Superado.' : open ? `${p.done} de ${p.total} retos resueltos.` : 'Bloqueado.'}`
-            const clases = `block w-full text-left rounded-lg border px-3 py-2.5 transition-colors duration-fast ease-out
-              ${open ? 'border-edge-strong hover:border-accent bg-surface-raised/50' : 'border-edge opacity-60 cursor-not-allowed'}
-              ${cleared ? 'border-accent/50' : ''}`
+          <ol className="relative space-y-6">
+            {rows.map((row, layer) => (
+              <li key={layer}>
+                <ol className="flex flex-wrap justify-center gap-4">
+                  {row.map(w => {
+                    const g = bossGate(state, w)
+                    return (
+                      <li key={w.id} className="w-40 shrink-0">
+                        <div ref={el => { nodes.current[w.id] = el }}>
+                          <GraphNode
+                            world={w}
+                            status={worldStatus(state, w)}
+                            done={g.done}
+                            total={g.total}
+                            selected={selectedId === w.id}
+                            onSelect={() => setSelectedId(w.id)}
+                          />
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ol>
+              </li>
+            ))}
+          </ol>
+        </div>
 
-            const contenido = (
-              <>
-                <span className="flex items-baseline gap-2">
-                  <span className="font-mono text-micro text-fg-tertiary tnum">{String(w.index).padStart(2, '0')}</span>
-                  <span className={`font-display text-body ${cleared ? 'text-accent' : ''}`}>{w.title}</span>
-                  {cleared && <span aria-hidden="true" className="text-accent text-caption">✓</span>}
-                  {bossReady && <Chip tone="warning" className="ml-auto">Boss lista</Chip>}
-                  {!open && <span aria-hidden="true" className="ml-auto text-micro text-fg-tertiary">Bloqueado</span>}
-                </span>
-                <span className="block text-caption text-fg-secondary mt-0.5 line-clamp-1">{w.tagline}</span>
-                {open && (
-                  <span className="mt-2 flex items-center gap-2">
-                    <Bar pct={p.pct} tone={cleared ? 'accent' : 'info'} height="h-1" />
-                    <span className="text-micro text-fg-tertiary tnum shrink-0">{p.done}/{p.total}</span>
-                  </span>
-                )}
-              </>
-            )
+        {/* Móvil: lista de dependencias, sin lienzo */}
+        <ol className="space-y-3 md:hidden">
+          {WORLDS.map(w => <MobileRow key={w.id} world={w} />)}
+        </ol>
 
-            return (
-              <m.li
-                key={w.id}
-                ref={el => { rows.current[i] = el }}
-                variants={listItem}
-                style={{ paddingLeft: gutter }}
-              >
-                {open
-                  ? <Link to={{ name: 'mundo', worldId: w.id }} aria-label={etiqueta} className={clases}>{contenido}</Link>
-                  : <span aria-label={etiqueta} className={clases}>{contenido}</span>}
-              </m.li>
-            )
-          })}
-        </m.ol>
+        {/* Detalle del mundo seleccionado */}
+        <aside className="mt-6 hidden md:block lg:sticky lg:top-6 lg:mt-0 lg:self-start">
+          <WorldDetail world={selected} />
+        </aside>
       </div>
-    </section>
+    </div>
+  )
+}
+
+function WorldDetail({ world }: { world: World }) {
+  const { state } = useGameState()
+  const status = worldStatus(state, world)
+  const meta = WORLD_STATUS_META[status]
+  const gate = bossGate(state, world)
+  const reqs = worldRequirements(state, world)
+  const deps = worldDependents(world.id)
+  const mastery = worldMastery(state, world)
+
+  return (
+    <div className="panel p-4">
+      <div className="mb-2 flex items-center gap-2">
+        <span className="font-mono text-micro text-fg-tertiary tnum">{worldCode(world)}</span>
+        <Badge tone={meta.tone} icon={meta.icon} className="ml-auto">{meta.label}</Badge>
+      </div>
+      <h2 className="text-h3">{world.title}</h2>
+      <p className="mt-1 text-caption text-fg-secondary">{world.tagline}</p>
+
+      {status !== 'locked' && (
+        <div className="mt-4">
+          <Bar
+            pct={gate.total ? (gate.done / gate.total) * 100 : 0}
+            tone={gate.cleared ? 'accent' : gate.open ? 'boss' : 'info'}
+            marker={gate.cleared ? undefined : gate.ratio * 100}
+            markerLabel={`La boss se abre con ${gate.required} retos`}
+            label={`${world.title}: ${gate.done} de ${gate.total} retos resueltos`}
+          />
+          <p className="mt-2 flex justify-between font-mono text-micro text-fg-tertiary tnum">
+            <span>{gate.done}/{gate.total} retos</span>
+            <span>{mastery.green}/{mastery.total} conceptos</span>
+          </p>
+        </div>
+      )}
+
+      <dl className="mt-4 space-y-3 text-caption">
+        <div>
+          <dt className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Requiere</dt>
+          <dd className="mt-1 flex flex-wrap gap-2">
+            {reqs.length === 0 && <span className="text-fg-secondary">Nada: es el punto de partida.</span>}
+            {reqs.map(r => (
+              <Link key={r.world.id} to={{ name: 'mundo', worldId: r.world.id }} className="inline-flex items-center gap-1 text-fg-secondary hover:text-accent">
+                <Icon name={r.cleared ? 'check' : 'lock'} size={13} className={r.cleared ? 'text-accent' : 'text-locked'} />
+                {worldCode(r.world)} {r.world.title}
+              </Link>
+            ))}
+          </dd>
+        </div>
+        <div>
+          <dt className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Desbloquea</dt>
+          <dd className="mt-1 flex flex-wrap gap-2">
+            {deps.length === 0 && <span className="text-fg-secondary">Nada: es el final de su rama.</span>}
+            {deps.map(d => (
+              <Link key={d.id} to={{ name: 'mundo', worldId: d.id }} className="text-fg-secondary hover:text-accent">
+                {worldCode(d)} {d.title}
+              </Link>
+            ))}
+          </dd>
+        </div>
+        <div>
+          <dt className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Boss battle</dt>
+          <dd className="mt-1 text-fg-secondary">
+            <span className={gate.open || gate.cleared ? 'text-boss' : ''}>{world.boss.title}</span> ·{' '}
+            {gate.size} retos · umbral {Math.round(gate.passRate * 100)} %
+            {!gate.open && !gate.cleared && <> · se abre con {gate.required} resueltos</>}
+          </dd>
+        </div>
+      </dl>
+
+      <Link to={{ name: 'mundo', worldId: world.id }} className={cx(buttonClass({ variant: 'secondary', block: true }), 'mt-4')}>
+        Abrir mundo
+        <Icon name="arrow-right" size={18} className="ml-2" />
+      </Link>
+    </div>
+  )
+}
+
+function MobileRow({ world }: { world: World }) {
+  const { state } = useGameState()
+  const status = worldStatus(state, world)
+  const meta = WORLD_STATUS_META[status]
+  const gate = bossGate(state, world)
+  const reqs = worldRequirements(state, world)
+  const deps = worldDependents(world.id)
+
+  return (
+    <li>
+      <Link
+        to={{ name: 'mundo', worldId: world.id }}
+        className={cx(
+          'block rounded-md border bg-surface-raised p-3 transition-colors duration-fast',
+          status === 'locked' ? 'border-dashed border-edge-strong' : 'border-edge',
+        )}
+      >
+        <span className="flex items-center gap-2">
+          <span className="font-mono text-micro text-fg-tertiary tnum">{worldCode(world)}</span>
+          <span className="font-display text-body text-fg">{world.title}</span>
+          <Badge tone={meta.tone} icon={meta.icon} className="ml-auto">{meta.label}</Badge>
+        </span>
+        {status !== 'locked' && (
+          <span className="mt-2 flex items-center gap-2">
+            <Bar pct={gate.total ? (gate.done / gate.total) * 100 : 0} height="h-1" tone={gate.cleared ? 'accent' : 'info'} />
+            <span className="shrink-0 font-mono text-micro text-fg-tertiary tnum">{gate.done}/{gate.total}</span>
+          </span>
+        )}
+        <span className="mt-2 block font-mono text-micro text-fg-tertiary">
+          {reqs.length > 0 && (
+            <>Requiere: {reqs.map(r => `${worldCode(r.world)}${r.cleared ? ' ✓' : ' ✕'}`).join(' · ')}</>
+          )}
+          {reqs.length > 0 && deps.length > 0 && ' — '}
+          {deps.length > 0 && <>Desbloquea: {deps.map(d => worldCode(d)).join(' · ')}</>}
+        </span>
+      </Link>
+    </li>
   )
 }
