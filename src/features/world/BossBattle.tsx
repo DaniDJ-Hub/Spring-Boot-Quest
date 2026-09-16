@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { World } from '../../types'
 import { CONCEPT_LABEL } from '../../data/worlds'
+import { metaOf } from '../../data'
 import { useGameActions, useGameState } from '../../engine/game-context'
 import { bossSet, masteryOf } from '../../engine/core'
 import { bossGate, bossPassed, worldDependents } from '../../engine/selectors'
@@ -37,6 +38,10 @@ export function BossBattle({ world, onExit, onPractice }: { world: World; onExit
   const queue = set.challenges
   const gate = bossGate(state, world)
   const kinds = useMemo(() => [...new Set(selection.map(c => c.kind))], [selection])
+  // La boss coge un reto por tipo, pero luego recorta al tamaño del mundo: si
+  // hay más tipos que etapas, alguno se queda fuera y hay que decirlo.
+  const worldKinds = useMemo(() => [...new Set(metaOf(world.id).map(c => c.kind))], [world])
+  const missingKinds = useMemo(() => worldKinds.filter(k => !kinds.includes(k)), [worldKinds, kinds])
 
   const correctCount = given.filter(g => g.correct).length
   const passed = bossPassed(world, correctCount, given.length)
@@ -76,8 +81,14 @@ export function BossBattle({ world, onExit, onPractice }: { world: World; onExit
 
             <ul className="mt-6 space-y-3">
               <Rule icon="layers">
-                {gate.size} etapas: un reto de cada tipo disponible en el mundo
-                ({kinds.map(k => KIND_META[k].label).join(' · ')}), priorizando los más difíciles.
+                {gate.size} etapas con el reto más difícil de cada tipo que cabe:{' '}
+                {kinds.map(k => KIND_META[k].label).join(' · ')}.
+                {missingKinds.length > 0 && (
+                  <>
+                    {' '}El mundo tiene {worldKinds.length} tipos y la boss son {gate.size} etapas, así que
+                    se queda fuera {missingKinds.map(k => KIND_META[k].label).join(' y ')}.
+                  </>
+                )}
               </Rule>
               <Rule icon="eye-off">Sin pistas y sin explicaciones hasta el final.</Rule>
               <Rule icon="target">

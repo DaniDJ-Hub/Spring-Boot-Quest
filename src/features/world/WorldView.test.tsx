@@ -7,6 +7,8 @@ import { GameProvider } from '../../engine/GameProvider'
 import { RouterProvider } from '../../app/router'
 import { emptyState, STORAGE_KEY } from '../../engine/core'
 import { bossGate } from '../../engine/selectors'
+import { bossSet } from '../../engine/core'
+import { KIND_META } from '../../components/ui'
 import { WORLD_BY_ID } from '../../data/worlds'
 import { metaOf } from '../../data'
 import type { GameState } from '../../types'
@@ -63,6 +65,23 @@ describe('puerta de la boss battle', () => {
     const abrir = [...dom.querySelectorAll('button')].find(b => b.textContent?.includes('Abrir la boss battle'))!
     expect(abrir.disabled).toBe(false)
     expect(dom.textContent).toContain(`${gate.passCount} aciertos`)
+  })
+
+  it('la intro dice qué tipo de reto no cabe en la boss', async () => {
+    // En w01 hay seis tipos y la boss son cuatro etapas: dos se quedan fuera,
+    // y la pantalla no puede prometer «uno de cada tipo».
+    const lista = metaOf('w01')
+    const tiposDelMundo = new Set(lista.map(c => c.kind))
+    const tiposDeLaBoss = new Set(bossSet(WORLD_BY_ID.w01).map(c => c.kind))
+    const fuera = [...tiposDelMundo].filter(k => !tiposDeLaBoss.has(k))
+    expect(fuera.length).toBeGreaterThan(0)
+
+    const dom = await montar('w01', { solved: resueltos(lista.map(c => c.id)) })
+    const abrir = [...dom.querySelectorAll('button')].find(b => b.textContent?.includes('Abrir la boss battle'))!
+    await act(async () => { abrir.dispatchEvent(new MouseEvent('click', { bubbles: true })) })
+    expect(dom.textContent).toContain('se queda fuera')
+    for (const k of fuera) expect(dom.textContent).toContain(KIND_META[k].label)
+    expect(dom.textContent).not.toContain('un reto de cada tipo')
   })
 
   it('la intro de la boss avisa de que no hay pistas ni explicaciones', async () => {
