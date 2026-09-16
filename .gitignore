@@ -5,3 +5,8 @@ dist
 *.tsbuildinfo
 coverage
 .meta-tmp
+
+# Skills de diseño instaladas en local (ui-ux-pro-max, frontend-design,
+# web-design-guidelines). Son ~3 MB de datos y scripts que no forman parte del
+# proyecto: cada quien las instala con `npx skills add …`.
+.claude/skills/
