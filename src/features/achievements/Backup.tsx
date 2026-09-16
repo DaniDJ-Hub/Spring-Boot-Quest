@@ -43,8 +43,8 @@ export function Backup() {
       </p>
 
       <div className="flex flex-wrap gap-3">
-        <Button variant="ghost" onClick={descargar}>Descargar progreso</Button>
-        <Button variant="ghost" onClick={() => input.current?.click()}>Restaurar desde un fichero</Button>
+        <Button variant="secondary" onClick={descargar}>Descargar progreso</Button>
+        <Button variant="secondary" onClick={() => input.current?.click()}>Restaurar desde un fichero</Button>
       </div>
 
       <input

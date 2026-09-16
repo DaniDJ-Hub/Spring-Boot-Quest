@@ -2,22 +2,33 @@ import { describe, expect, it } from 'vitest'
 import config from '../../tailwind.config.js'
 import * as A from './motion'
 
-const tw = config.theme.extend.transitionDuration as Record<string, string>
+const ext = (config as unknown as { theme: { extend: Record<string, unknown> } }).theme.extend
+const tw = ext.transitionDuration as Record<string, string>
+const NO_VARIANTES = new Set(['DURATION', 'EASE_OUT', 'EASE_IN_OUT', 'T', 'SPRING', 'TAP', 'EDGE_STEP'])
+const TRAMOS = [{ axis: 'y', step: 0 }, { axis: 'x', step: 1 }, { axis: 'y', step: 2 }]
 
-describe('sistema de animación centralizado (M-2)', () => {
+describe('lenguaje de movimiento (M-2)', () => {
   it('las duraciones coinciden con los tokens de Tailwind', () => {
-    for (const k of ['instant', 'quick', 'smooth'] as const) {
-      expect(A.DURATION[k] * 1000).toBe(parseFloat(tw[k]))
+    for (const k of ['fast', 'base', 'slow', 'unlock'] as const) {
+      expect(A.DURATION[k] * 1000, k).toBe(parseFloat(tw[k]))
     }
   })
 
-  it('no hay animaciones largas: nada por encima de 300 ms', () => {
-    for (const d of Object.values(A.DURATION)) expect(d).toBeLessThanOrEqual(0.3)
+  it('la escala es 150 / 250 / 400 ms', () => {
+    expect([A.DURATION.fast, A.DURATION.base, A.DURATION.slow]).toEqual([0.15, 0.25, 0.4])
+  })
+
+  it('solo el desbloqueo supera los 400 ms, y nunca los 600', () => {
+    for (const [k, d] of Object.entries(A.DURATION)) {
+      if (k === 'unlock') expect(d).toBeLessThanOrEqual(0.6)
+      else expect(d, k).toBeLessThanOrEqual(0.4)
+    }
   })
 
   it('todas las variantes usan la escala, sin duraciones sueltas', () => {
-    const permitidas = new Set<number>(Object.values(A.DURATION))
+    const permitidas = new Set<number>([...Object.values(A.DURATION), A.EDGE_STEP])
     const revisar = (v: unknown) => {
+      if (typeof v === 'function') { for (const t of TRAMOS) revisar(v(t)); return }
       if (typeof v !== 'object' || v === null) return
       const o = v as Record<string, unknown>
       const t = o.transition as Record<string, unknown> | undefined
@@ -25,13 +36,26 @@ describe('sistema de animación centralizado (M-2)', () => {
       for (const val of Object.values(o)) revisar(val)
     }
     for (const [nombre, variante] of Object.entries(A)) {
-      if (nombre === 'DURATION' || nombre === 'EASE' || nombre === 'T' || nombre === 'SPRING' || nombre === 'TAP') continue
+      if (NO_VARIANTES.has(nombre)) continue
       revisar(variante)
     }
   })
 
+  it('solo se animan transform y opacity', () => {
+    const permitidas = new Set(['opacity', 'x', 'y', 'scale', 'scaleX', 'scaleY', 'transition'])
+    const revisarEstado = (estado: unknown) => {
+      const e = typeof estado === 'function' ? Object.assign({}, ...TRAMOS.map(t => estado(t))) : estado
+      if (typeof e !== 'object' || e === null) return
+      for (const k of Object.keys(e)) expect(permitidas.has(k), k).toBe(true)
+    }
+    for (const [nombre, variante] of Object.entries(A)) {
+      if (NO_VARIANTES.has(nombre)) continue
+      for (const estado of Object.values(variante as Record<string, unknown>)) revisarEstado(estado)
+    }
+  })
+
   it('cada variante define entrada y estado visible', () => {
-    for (const nombre of ['page', 'challenge', 'toast', 'dialogPanel', 'dialogBackdrop', 'listItem', 'reveal'] as const) {
+    for (const nombre of ['page', 'challenge', 'reveal', 'verdict', 'toast', 'dialogPanel', 'dialogBackdrop', 'listItem', 'masteryDown', 'pipelineStage', 'edgeGrow'] as const) {
       expect(A[nombre].hidden, nombre).toBeDefined()
       expect(A[nombre].show, nombre).toBeDefined()
     }
@@ -44,20 +68,24 @@ describe('sistema de animación centralizado (M-2)', () => {
   })
 
   it('el muelle se reserva para lo que interrumpe', () => {
-    const conMuelle = ['toast', 'dialogPanel'] as const
-    for (const nombre of conMuelle) {
+    for (const nombre of ['toast', 'dialogPanel'] as const) {
       const show = A[nombre].show as { transition?: { type?: string } }
       expect(show.transition?.type, nombre).toBe('spring')
     }
-    const sinMuelle = ['page', 'challenge', 'listItem', 'reveal'] as const
-    for (const nombre of sinMuelle) {
+    for (const nombre of ['page', 'challenge', 'listItem', 'reveal', 'verdict', 'masteryDown', 'pipelineStage'] as const) {
       const show = A[nombre].show as { transition?: { type?: string } }
       expect(show.transition?.type, nombre).not.toBe('spring')
     }
   })
 
+  it('la bajada de dominio no sacude: sin desplazamiento lateral ni escala', () => {
+    const show = A.masteryDown.show as Record<string, unknown>
+    expect(show.x).toBeUndefined()
+    expect(show.scale).toBeUndefined()
+  })
+
   it('el escalonado es discreto', () => {
     const show = A.staggered.show as { transition?: { staggerChildren?: number } }
-    expect(show.transition?.staggerChildren).toBeLessThanOrEqual(0.05)
+    expect(show.transition?.staggerChildren).toBeLessThanOrEqual(0.08)
   })
 })

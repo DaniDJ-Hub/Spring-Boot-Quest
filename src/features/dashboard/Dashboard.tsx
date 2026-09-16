@@ -1,29 +1,28 @@
-import { CONCEPT_LABEL, WORLDS } from '../../data/worlds'
+import type { ReactNode } from 'react'
+import { WORLDS, WORLD_BY_ID } from '../../data/worlds'
 import { META_BY_ID } from '../../data'
 import { useGameState } from '../../engine/game-context'
-import { WORLD_BY_ID as WBI } from '../../data/worlds'
+import { levelProgress, MASTERY_META, MASTERY_ORDER, nextTitle, overallProgress, titleFor } from '../../engine/core'
+import {
+  bossGate, examAvailability, globalMastery, lastActiveWorld, nextBossToOpen, reinforceRule, weakCount, worldStatus,
+} from '../../engine/selectors'
 import { Link } from '../../app/router'
 import { useRouter } from '../../app/router-context'
 import { Onboarding } from './Onboarding'
-import {
-  levelProgress, masteryOf, nextTitle, overallProgress, titleFor, weakConcepts, worldProgress,
-} from '../../engine/core'
-import { Bar, Button, Chip, MasteryDot } from '../../components/ui'
+import { Badge, Bar, Button, cx, Icon, KIND_META, WorldCard, worldCode } from '../../components/ui'
+import type { IconName } from '../../components/ui'
 import { Counter } from '../../components/Counter'
 
-const KIND_LABEL: Record<string, string> = {
-  quiz: 'Reto conceptual', codefix: 'Corregir código', debug: 'Debugging',
-  arch: 'Arquitectura', decision: 'Decisión profesional', order: 'Ordenar flujo',
-  fill: 'Completar código',
-}
-
-function Stat({ label, value, sub }: { label: string; value: number; sub?: string }) {
+function Module({ title, icon, children, action }: { title: string; icon: IconName; children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="panel px-4 py-3">
-      <div className="text-micro text-fg-tertiary mb-1">{label}</div>
-      <Counter value={value} className="block font-display text-h2 tnum leading-none" />
-      {sub && <div className="text-micro text-fg-secondary mt-1.5">{sub}</div>}
-    </div>
+    <section className="panel flex flex-col p-4">
+      <h2 className="mb-3 flex items-center gap-2 font-mono text-micro uppercase tracking-wide text-fg-tertiary">
+        <Icon name={icon} size={14} />
+        {title}
+      </h2>
+      <div className="flex-1">{children}</div>
+      {action && <div className="mt-4">{action}</div>}
+    </section>
   )
 }
 
@@ -32,152 +31,218 @@ export function Dashboard() {
   const { navigate } = useRouter()
   const lp = levelProgress(state.xp)
   const overall = overallProgress(state)
-  const weak = weakConcepts(state, 6)
+  const mastery = globalMastery(state)
+  const weak = weakCount(state)
   const nt = nextTitle(lp.level)
-  const allConcepts = WORLDS.flatMap(w => w.concepts)
-  const green = allConcepts.filter(k => ['mastered', 'expert'].includes(masteryOf(state, k))).length
-  const recent = state.log.slice(0, 6)
-  const examReady = state.bossCleared.length === WORLDS.length
-  // Sin una sola respuesta registrada, un panel de ceros no orienta a nadie.
-  const primeraVez = overall.done === 0 && state.xp === 0 && state.log.length === 0
+  const exam = examAvailability(state)
+  const nextBoss = nextBossToOpen(state)
+  const last = lastActiveWorld(state)
 
-  if (primeraVez) return <Onboarding />
+  // Sin una sola respuesta registrada, un panel de ceros no orienta a nadie.
+  if (overall.done === 0 && state.xp === 0 && state.log.length === 0) return <Onboarding />
+
+  // Punto focal: una sola acción, la que toca ahora.
+  const focus = nextBoss?.gate.open ? nextBoss.world : last ?? nextBoss?.world ?? WORLDS[0]
+  const focusStatus = worldStatus(state, focus)
+  const focusGate = bossGate(state, focus)
 
   return (
-    <div className="space-y-8">
-      {/* Nivel */}
-      <section className="panel p-5">
-        <div className="flex flex-wrap items-end justify-between gap-3 mb-3">
+    <div className="mx-auto max-w-6xl space-y-8">
+      {/* Siguiente acción */}
+      <section>
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <div className="text-micro text-fg-tertiary mb-1">Nivel {lp.level}</div>
-            <h1 className="font-display text-h2 text-accent leading-none">{titleFor(lp.level)}</h1>
+            <p className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Siguiente acción</p>
+            <h1 className="font-display text-h2">
+              {focusGate.open ? 'Tienes un deploy listo' : last ? 'Continúa donde lo dejaste' : 'Sigue por aquí'}
+            </h1>
           </div>
           <div className="text-right">
-            <Counter value={state.xp} className="block font-display text-h2 tnum leading-none" />
-            <div className="text-micro text-fg-tertiary mt-1">XP acumulado</div>
+            <Counter value={state.xp} className="block font-display text-display leading-none text-fg tnum" />
+            <p className="font-mono text-micro text-fg-tertiary">XP acumulado</p>
           </div>
         </div>
-        <Bar pct={lp.pct} label={`Progreso hacia el nivel ${lp.level + 1}`} />
-        <div className="flex justify-between mt-2 text-micro text-fg-tertiary tnum">
-          <span>{lp.floor} XP</span>
-          <span>{nt ? `${nt.name} en el nivel ${nt.level}` : 'Nivel máximo de títulos'}</span>
-          <span>{lp.ceil} XP</span>
+
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <WorldCard world={focus} status={focusStatus} gate={focusGate} headline />
+
+          <div className="panel flex flex-col justify-between gap-4 p-4">
+            <div>
+              <p className="font-mono text-micro uppercase tracking-wide text-fg-tertiary">Nivel {lp.level}</p>
+              <p className="font-display text-h3 text-accent">{titleFor(lp.level)}</p>
+              <div className="mt-3">
+                <Bar pct={lp.pct} label={`Progreso hacia el nivel ${lp.level + 1}`} />
+                <p className="mt-2 flex justify-between gap-2 font-mono text-micro text-fg-tertiary tnum">
+                  <span>{lp.floor} XP</span>
+                  <span className="truncate">{nt ? `${nt.name} · nivel ${nt.level}` : 'Todos los títulos'}</span>
+                  <span>{lp.ceil} XP</span>
+                </p>
+              </div>
+            </div>
+            <dl className="grid grid-cols-3 gap-3 border-t border-edge pt-3 text-center">
+              {[
+                ['Retos', `${overall.done}/${overall.total}`],
+                ['Conceptos', `${mastery.green}/${mastery.total}`],
+                ['Mundos', `${state.bossCleared.length}/${WORLDS.length}`],
+              ].map(([k, v]) => (
+                <div key={k}>
+                  <dt className="font-mono text-micro text-fg-tertiary">{k}</dt>
+                  <dd className="font-display text-body text-fg tnum">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </div>
       </section>
 
-      {/* Cifras */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Stat label="Racha" value={state.streak.count} sub={state.streak.count === 1 ? 'día' : 'días seguidos'} />
-        <Stat label="Retos resueltos" value={overall.done} sub={`de ${overall.total}`} />
-        <Stat label="Conceptos dominados" value={green} sub={`de ${allConcepts.length}`} />
-        <Stat label="Mundos superados" value={state.bossCleared.length} sub={`de ${WORLDS.length}`} />
+      {/* Refuerzo · dominio · examen */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Module
+          title="Sesión de refuerzo"
+          icon="target"
+          action={
+            weak > 0
+              ? <Button size="sm" icon="play" onClick={() => navigate({ name: 'refuerzo' })}>Reforzar ahora</Button>
+              : <p className="text-caption text-fg-tertiary">Nada que reforzar ahora mismo.</p>
+          }
+        >
+          {weak > 0 ? (
+            <>
+              <p className="font-display text-h2 text-warning tnum">{weak}</p>
+              <p className="text-caption text-fg-secondary">
+                {weak === 1 ? 'concepto por debajo' : 'conceptos por debajo'} del {Math.round(reinforceRule.accuracy * 100)} % de aciertos,
+                con al menos {reinforceRule.minAttempts} intentos.
+              </p>
+            </>
+          ) : (
+            <p className="text-caption text-fg-secondary">
+              Ningún concepto baja del {Math.round(reinforceRule.accuracy * 100)} % de aciertos. El refuerzo se abre solo cuando lo hay.
+            </p>
+          )}
+        </Module>
+
+        <Module title="Dominio global" icon="layers">
+          <p className="mb-3 font-display text-h2 text-fg tnum">
+            {mastery.green}<span className="text-body text-fg-tertiary"> / {mastery.total}</span>
+          </p>
+          <div className="flex h-2 w-full overflow-hidden rounded-full bg-edge-soft">
+            {MASTERY_ORDER.map(level => (
+              mastery[level] > 0 && (
+                <span
+                  key={level}
+                  className={cx('h-full', MASTERY_META[level].dot)}
+                  style={{ width: `${(mastery[level] / mastery.total) * 100}%` }}
+                />
+              )
+            ))}
+          </div>
+          <ul className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1">
+            {MASTERY_ORDER.map(level => (
+              <li key={level} className="flex items-center gap-2 font-mono text-micro text-fg-tertiary">
+                <span className={cx('h-2 w-2 rounded-sm', MASTERY_META[level].dot)} />
+                <span className="truncate">{MASTERY_META[level].label}</span>
+                <span className="ml-auto tnum">{mastery[level]}</span>
+              </li>
+            ))}
+          </ul>
+        </Module>
+
+        <Module
+          title="Hacia el examen final"
+          icon="file-check"
+          action={
+            exam.available || exam.taken
+              ? <Button size="sm" icon="file-check" onClick={() => navigate({ name: 'examen' })}>
+                  {exam.taken ? 'Ver el Skill Report' : 'Presentar examen'}
+                </Button>
+              : nextBoss && (
+                  <Link to={{ name: 'mundo', worldId: nextBoss.world.id }} className="text-caption text-fg-secondary hover:text-accent">
+                    Próxima boss: {nextBoss.world.title} →
+                  </Link>
+                )
+          }
+        >
+          <p className="font-display text-h2 text-fg tnum">
+            {exam.cleared}<span className="text-body text-fg-tertiary"> / {exam.total}</span>
+          </p>
+          <p className="mb-3 text-caption text-fg-secondary">boss battles superadas</p>
+          <Bar pct={(exam.cleared / exam.total) * 100} tone={exam.available ? 'accent' : 'info'} label="Boss battles superadas" />
+          {state.exam && (
+            <p className="mt-3 font-mono text-micro text-fg-secondary tnum">
+              Último examen: {state.exam.score}/{state.exam.total}
+            </p>
+          )}
+        </Module>
+      </div>
+
+      {/* Los quince mundos de un vistazo */}
+      <section>
+        <h2 className="mb-3 flex items-center gap-2 font-mono text-micro uppercase tracking-wide text-fg-tertiary">
+          <Icon name="graph" size={14} />
+          Los quince mundos
+        </h2>
+        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+          {WORLDS.map(w => {
+            const st = worldStatus(state, w)
+            const g = bossGate(state, w)
+            const tone = st === 'locked' ? 'border-dashed border-edge text-fg-tertiary'
+              : st === 'boss-open' ? 'border-boss/60 text-boss'
+                : st === 'cleared' || st === 'mastered' ? 'border-accent/50 text-accent'
+                  : 'border-edge-strong text-fg-secondary'
+            return (
+              <li key={w.id}>
+                <Link
+                  to={{ name: 'mundo', worldId: w.id }}
+                  aria-label={`Mundo ${w.index}: ${w.title}. ${g.done} de ${g.total} retos resueltos.`}
+                  className={cx('block rounded-md border bg-surface-raised p-2 transition-colors duration-fast hover:bg-surface-overlay', tone)}
+                >
+                  <span className="flex items-center justify-between font-mono text-micro tnum">
+                    {worldCode(w)}
+                    {(st === 'cleared' || st === 'mastered') && <Icon name="check" size={12} />}
+                    {st === 'boss-open' && <Icon name="rocket" size={12} />}
+                    {st === 'locked' && <Icon name="lock" size={12} />}
+                  </span>
+                  <span className="mt-1 block truncate text-caption text-fg">{w.title}</span>
+                  <span className="mt-1 block">
+                    <Bar pct={g.total ? (g.done / g.total) * 100 : 0} height="h-1" tone={st === 'locked' ? 'neutral' : 'accent'} />
+                  </span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
       </section>
 
-      {/* Progreso por mundo */}
+      {/* Actividad */}
       <section>
-        <h2 className="text-body text-fg-secondary mb-3">Progreso por mundo</h2>
-        <div className="panel p-4 space-y-2">
-          {WORLDS.map(w => {
-            const p = worldProgress(state, w.id)
-            const cleared = state.bossCleared.includes(w.id)
+        <h2 className="mb-3 flex items-center gap-2 font-mono text-micro uppercase tracking-wide text-fg-tertiary">
+          <Icon name="terminal" size={14} />
+          Actividad reciente
+        </h2>
+        <div className="panel divide-y divide-edge-soft overflow-hidden">
+          {state.log.length === 0 && <p className="px-4 py-6 text-body text-fg-secondary">Sin actividad todavía.</p>}
+          {state.log.slice(0, 8).map((l, i) => {
+            const meta = META_BY_ID[l.challengeId]
             return (
-              <Link
-                key={w.id}
-                to={{ name: 'mundo', worldId: w.id }}
-                className="w-full flex items-center gap-3 group text-left min-h-[28px]"
-              >
-                <span className="font-mono text-micro text-fg-tertiary tnum w-5 shrink-0">{String(w.index).padStart(2, '0')}</span>
-                <span className="text-caption w-32 sm:w-44 shrink-0 truncate group-hover:text-accent transition-colors">{w.title}</span>
-                <Bar pct={p.pct} tone={cleared ? 'accent' : p.pct > 0 ? 'info' : 'warning'} height="h-1.5" label={`${w.title}: ${Math.round(p.pct)} por ciento`} />
-                <span className="text-micro text-fg-tertiary tnum w-10 text-right shrink-0">{Math.round(p.pct)}%</span>
-              </Link>
+              <p key={`${l.challengeId}-${i}`} className="flex items-center gap-3 px-4 py-2 font-mono text-micro">
+                <Icon name={l.correct ? 'check' : 'x'} size={14} className={l.correct ? 'text-accent' : 'text-danger'} />
+                <span className="sr-only">{l.correct ? 'Acertado' : 'Fallado'}:</span>
+                <span className="text-fg-tertiary tnum">{l.challengeId}</span>
+                <span className="truncate text-fg-secondary">{meta ? KIND_META[meta.kind].label : 'Reto'}</span>
+                <span className="ml-auto shrink-0 truncate text-fg-tertiary">{WORLD_BY_ID[l.worldId]?.title}</span>
+              </p>
             )
           })}
         </div>
       </section>
 
-      {/* Puntos flojos */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-body text-fg-secondary">Conceptos que fallas más de lo que aciertas</h2>
-          {weak.length > 0 && <Button variant="ghost" onClick={() => navigate({ name: 'refuerzo' })} className="!py-1 !px-3 text-caption">Sesión de refuerzo</Button>}
-        </div>
-        <div className="panel p-4">
-          {weak.length === 0 ? (
-            <p className="text-body text-fg-secondary">
-              {overall.done === 0
-                ? 'Todavía no hay datos. Resuelve algunos retos y aquí aparecerá lo que se te resiste.'
-                : 'Nada por debajo del 60 % de aciertos ahora mismo. Sigue avanzando por el mapa.'}
-            </p>
-          ) : (
-            <ul className="space-y-2.5">
-              {weak.map(k => {
-                const s = state.concepts[k]
-                const acc = s ? s.correct / s.attempts : 0
-                const world = WORLDS.find(w => w.concepts.includes(k))
-                return (
-                  <li key={k} className="flex items-center gap-3">
-                    <MasteryDot level={masteryOf(state, k)} />
-                    <span className="text-body flex-1">{CONCEPT_LABEL[k] ?? k}</span>
-                    {world && <Chip className="hidden sm:inline-flex">{world.title}</Chip>}
-                    <span className="text-micro text-fg-tertiary tnum w-16 text-right">{Math.round(acc * 100)} % · {s?.attempts}</span>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </div>
-      </section>
-
-      {/* Actividad + examen */}
-      <section className="grid gap-4 lg:grid-cols-2">
-        <div>
-          <h2 className="text-body text-fg-secondary mb-3">Últimos retos</h2>
-          <ul className="panel divide-y divide-edge">
-            {recent.length === 0 && <li className="px-4 py-6 text-body text-fg-secondary">Sin actividad todavía.</li>}
-            {recent.map((l, i) => {
-              // El enunciado vive en el contenido diferido; aquí basta el tipo de
-              // reto, que sale del índice sincrónico.
-              const m = META_BY_ID[l.challengeId]
-              return (
-                <li key={`${l.challengeId}-${i}`} className="flex items-center gap-3 px-4 py-2.5">
-                  <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full shrink-0 ${l.correct ? 'bg-accent' : 'bg-danger'}`} />
-                  <span className="text-caption flex-1 truncate">
-                    {KIND_LABEL[m?.kind ?? 'quiz']}
-                    <span className="sr-only">{l.correct ? ' · acertado' : ' · fallado'}</span>
-                  </span>
-                  <span className="text-micro text-fg-tertiary shrink-0">{WBI[l.worldId]?.title}</span>
-                </li>
-              )
-            })}
-          </ul>
-        </div>
-
-        <div>
-          <h2 className="text-body text-fg-secondary mb-3">Examen final</h2>
-          <div className="panel p-5">
-            <div className="font-display text-lead mb-1">Spring Boot Expert Exam</div>
-            {state.exam ? (
-              <>
-                <p className="text-body text-fg-secondary mb-3">
-                  Último resultado: {state.exam.score} de {state.exam.total} ·{' '}
-                  {Math.round((state.exam.score / Math.max(1, state.exam.total)) * 100)} %
-                </p>
-                <Button variant="ghost" onClick={() => navigate({ name: 'examen' })}>Ver el reporte o repetirlo</Button>
-              </>
-            ) : (
-              <>
-                <p className="text-body text-fg-secondary mb-3">
-                  {examReady
-                    ? 'Los quince mundos están superados. Treinta retos de todo el curso, sin pistas.'
-                    : `Se abre al superar los quince mundos. Llevas ${state.bossCleared.length}.`}
-                </p>
-                <Button onClick={() => navigate({ name: 'examen' })} disabled={!examReady}>Presentar examen</Button>
-              </>
-            )}
-          </div>
-        </div>
-      </section>
+      {state.bossCleared.length > 0 && (
+        <p className="flex flex-wrap items-center gap-2 text-caption text-fg-tertiary">
+          <Badge variant="label" icon="ticket">Proyectos</Badge>
+          Cada boss superada abre un brief para construir en tu IDE.
+          <Link to={{ name: 'proyectos' }} className="text-fg-secondary underline hover:text-accent">Ver proyectos</Link>
+        </p>
+      )}
     </div>
   )
 }

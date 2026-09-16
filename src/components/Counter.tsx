@@ -25,11 +25,15 @@ export function Counter({ value, className }: { value: number; className?: strin
     if (reduced || from === value) { setShown(value); return }
 
     const ms = Math.min(700, 250 + Math.abs(value - from) * 2.5)
-    const start = performance.now()
+    // El inicio se toma del primer fotograma y no de performance.now(): el
+    // reloj de requestAnimationFrame puede tener otro origen (pasa en jsdom) y
+    // un t negativo hacía que la cuenta arrancara muy por debajo de cero.
+    let start: number | null = null
     let frame = 0
 
     const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / ms)
+      if (start === null) start = now
+      const t = Math.max(0, Math.min(1, (now - start) / ms))
       setShown(Math.round(from + (value - from) * EASE_OUT(t)))
       if (t < 1) frame = requestAnimationFrame(tick)
     }
